@@ -94,6 +94,6 @@ class Waves:
 
 # get number of frames in argument
 num = int(sys.argv[1])
-w = Waves(400,400,num)
+w = Waves(100,100,num)
 print ("to generate gif:")
-print ("convert -delay 2 -loop 0 images/*.png animation.gif")
+print ("convert -delay 2 -loop 0 -layers optimize-frame -fuzz 50% images/*.png animation.gif")
