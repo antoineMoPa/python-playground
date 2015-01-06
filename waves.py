@@ -1,13 +1,14 @@
 # run specifying number of frames to render
-
-from PIL import Image
+import tkinter as tk
+from PIL import Image, ImageTk
 import numpy as np
 import math
 import os
 import sys
+from copy import *
 
 class Waves:
-    def __init__(self,w,h,frames):
+    def __init__(self,w,h):
         self.w, self.h = w,h
         self.data = np.zeros( (self.w,self.h,3), dtype=np.uint8)        
         self.time = 0
@@ -24,18 +25,20 @@ class Waves:
         
         if not os.path.exists("./images"):
             os.makedirs("./images")
-
-        for i in range(frames):
-            self.draw()
-            self.outputImg()
-            self.iterate()
-
+            
+        
+        
+        #for i in range(frames)
+        #    self.outputImg()
+        #    self.iterate()
 
     def outputImg(self):
-        self.img = Image.fromarray(self.data,'RGB')
-        self.img.save('./images/test'+str(self.image).zfill(6)+'.png')
+        img = self.getImage()
+        img.save('./images/test'+str(self.image).zfill(6)+'.png')
         self.image += 1
-    
+    def getImage(self):
+        self.draw()
+        return Image.fromarray(self.data,'RGB')
     def point(self,i,j,radius,value):
         i = math.floor(i)
         j = math.floor(j)
@@ -92,8 +95,43 @@ class Waves:
         self.data[:,:,1] = np.floor(self.speeds * 255)
         self.data[:,:,2] = np.floor(self.heights * 255)
 
+class Application(tk.Frame):
+    def __init__(self, master = None):
+        tk.Frame.__init__(self, master)
+        self.pack()
+        self.waves = Waves(400,400)
+        self.createWidgets()
+        
+        self.image = None
+
+    def iterate(self):
+        self.waves.iterate()
+        self.putWavesImage()
+
+    def putWavesImage(self):
+        self.image = ImageTk.PhotoImage(self.waves.getImage())
+        self.canvas.create_image(200,200,image = self.image)
+
+    def createWidgets(self):
+        self.iterate_btn = tk.Button(self)
+        self.iterate_btn["text"] = "Iterate"
+        self.iterate_btn["command"] = self.iterate
+        self.iterate_btn.pack()
+        
+        self.canvas = tk.Canvas(self,
+                                width = self.waves.w, 
+                                height = self.waves.h)
+
+        self.putWavesImage()
+        self.canvas.pack()
+        
+app = Application()
+app.master.title("Waves")
+app.mainloop()
+
+
 # get number of frames in argument
-num = int(sys.argv[1])
-w = Waves(100,100,num)
-print ("to generate gif:")
-print ("convert -delay 2 -loop 0 -layers optimize-frame -fuzz 50% images/*.png animation.gif")
+#num = 100
+#w = Waves(100,100,num)
+#print ("to generate gif:")
+#print ("convert -delay 2 -loop 0 -layers optimize-frame -fuzz 50% images/*.png animat#ion.gif")
