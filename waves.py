@@ -1,5 +1,6 @@
 # run specifying number of frames to render
 import tkinter as tk
+import tkinter.ttk as ttk
 from PIL import Image, ImageTk
 import numpy as np
 import math
@@ -10,36 +11,29 @@ from copy import *
 class Waves:
     def __init__(self,w,h):
         self.w, self.h = w,h
-        self.data = np.zeros( (self.w,self.h,3), dtype=np.uint8)        
+        self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
         self.time = 0
         self.interval = 0.2
         self.heights = np.ones( (self.w,self.h), dtype=np.float32)
         self.speeds = np.zeros( (self.w,self.h), dtype=np.float32)
         self.damping = 1
-        
         self.heights /= 2
-        
-        self.point(self.w/2,self.h/4,8,1)
-        
+
         self.image = 0
-        
+
         if not os.path.exists("./images"):
             os.makedirs("./images")
-            
-        
-        
-        #for i in range(frames)
-        #    self.outputImg()
-        #    self.iterate()
 
     def outputImg(self):
         img = self.getImage()
         img.save('./images/test'+str(self.image).zfill(6)+'.png')
         self.image += 1
-    def getImage(self):
-        self.draw()
-        return Image.fromarray(self.data,'RGB')
-    def point(self,i,j,radius,value):
+
+    def getImage(self, channels):
+        self.draw(channels)
+        return Image.fromarray(self.data,'RGBA')
+
+    def point(self,j,i,radius,value):
         i = math.floor(i)
         j = math.floor(j)
         for k in range(i - radius,i + radius):
@@ -47,10 +41,10 @@ class Waves:
                 d = self.dist(i,j,k,l)
                 if(d < radius):
                     self.heights[k][l] += value * (1-d / radius)
-                    
+
     def dist(self,x1,y1,x2,y2):
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
-        
+
     def iterate(self):
         # we equilibrate with 4 cells so we divide effect of each cell by 4
         factor = 1/4
@@ -58,15 +52,15 @@ class Waves:
         speeds = self.speeds
         heights = self.heights
         damping = self.damping
-        
+
         # When I wrote that code, only god and I knew what it meant
         # now only god knows
-        
+
         # find difference
         # multiply difference by factor
         # add it to speed
         # substract speed to neighbours
-        
+
         h1 = np.roll(np.copy(heights),1,axis=0)
         h2 = np.roll(np.copy(heights),-1,axis=0)
         h3 = np.roll(np.copy(heights),1,axis=1)
@@ -76,56 +70,245 @@ class Waves:
         d2 = factor * (heights - h2)
         d3 = factor * (heights - h3)
         d4 = factor * (heights - h4)
-   
+
         speeds -= d1
         speeds -= d2
         speeds -= d3
         speeds -= d4
-        
+
         speeds += np.roll(d1,-1,axis=0)
         speeds += np.roll(d2,1,axis=0)
         speeds += np.roll(d3,-1,axis=1)
         speeds += np.roll(d4,1,axis=1)
-        
+
         speeds *= damping
-        heights += speeds                
+        heights += speeds
 
-    def draw(self):        
-        self.data[:,:,0] = np.floor(self.heights * 255)
-        self.data[:,:,1] = np.floor(self.speeds * 255)
-        self.data[:,:,2] = np.floor(self.heights * 255)
+    def draw(self, channels):
+        red = green = blue = alpha = None
 
-class Application(tk.Frame):
+        for channel in ["red","green","blue","alpha"]:
+            i = None
+            if (channel == 'red'):
+                i = 0
+            elif (channel == 'green'):
+                i = 1
+            elif (channel == 'blue'):
+                i = 2
+            elif (channel == 'alpha'):
+                i = 3
+            else:
+                print("error: channel does not exist")
+
+            ch = channels[channel].get()
+            val = None
+
+            try:
+                mult = float(channels[channel+"Multiplier"].get())
+            except:
+                print("invalid multiplier")
+                mult = 1
+
+            if (ch == "height"):
+                val = self.heights
+            elif (ch == "speed"):
+                val = self.speeds
+            elif (ch == "1"):
+                val = 1
+            elif (ch == "0"):
+                val = 0
+            else:
+                print("error: channel value is not handled")
+
+            self.data[:,:,i] = np.floor(mult * val * 255)
+
+class Application(ttk.Frame):
     def __init__(self, master = None):
-        tk.Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
         self.pack()
-        self.waves = Waves(400,400)
+        self.w = 500
+        self.h = 500
+        self.waves = Waves(self.w, self.h)
+        self.initChanels()
         self.createWidgets()
-        
         self.image = None
+        self.master = master
+        self.mouseX = self.w/2
+        self.mouseY = self.h/2
+        self.putWavesImage()
+        self.after(30, self.refresh)
+        self.playing = 0
+
+    def refresh(self):
+        if(self.playing == 1):
+            self.iterate()
+        self.after(30, self.refresh)
+
+    def initChanels(self):
+        self.channelsOptions = [
+            "height",
+            "speed",
+            "1",
+            "0"]
+
+        self.redCO = copy(self.channelsOptions)
+        self.greenCO = copy(self.channelsOptions)
+        self.blueCO = copy(self.channelsOptions)
+        self.alphaCO = copy(self.channelsOptions)
+
+        self.redCO.insert(0,"height")
+        self.greenCO.insert(0,"height")
+        self.blueCO.insert(0,"height")
+        self.alphaCO.insert(0,"1")
+
+        self.channels = {}
+        self.channels["red"] = tk.StringVar(master)
+        self.channels["green"] = tk.StringVar(master)
+        self.channels["blue"] = tk.StringVar(master)
+        self.channels["alpha"] = tk.StringVar(master)
+
+        self.channels["redMultiplier"] = tk.StringVar(master)
+        self.channels["greenMultiplier"] = tk.StringVar(master)
+        self.channels["blueMultiplier"] = tk.StringVar(master)
+        self.channels["alphaMultiplier"] = tk.StringVar(master)
+
+        self.channels['red'].set("height")
+        self.channels['green'].set("height")
+        self.channels['blue'].set("height")
+        self.channels['alpha'].set("1")
+
+        self.channels["redMultiplier"].set("1")
+        self.channels["greenMultiplier"].set("1")
+        self.channels["blueMultiplier"].set("1")
+        self.channels["alphaMultiplier"].set("1")
 
     def iterate(self):
         self.waves.iterate()
         self.putWavesImage()
 
     def putWavesImage(self):
-        self.image = ImageTk.PhotoImage(self.waves.getImage())
-        self.canvas.create_image(200,200,image = self.image)
+        self.image = ImageTk.PhotoImage(self.waves.getImage(self.channels))
+        self.canvas.create_image(self.w/2, self.h/2, image = self.image)
+
+    def play(self):
+        if(self.playing == 1):
+            self.playing = 0
+            self.play_btn["text"] = "Play"
+        else:
+            self.playing = 1
+            self.play_btn["text"] = "Pause"
 
     def createWidgets(self):
-        self.iterate_btn = tk.Button(self)
+        self.middle_panel = tk.Frame()
+
+        self.createTopPanelWidgets()
+        self.createCanvasWidgets()
+        self.createColorSettingsWidgets()
+
+    def createTopPanelWidgets(self):
+        self.top_panel = tk.Frame()
+        self.play_btn = ttk.Button(self.top_panel)
+        self.play_btn["text"] = "Play"
+        self.play_btn["command"] = self.play
+
+        self.iterate_btn = ttk.Button(self.top_panel)
         self.iterate_btn["text"] = "Iterate"
         self.iterate_btn["command"] = self.iterate
-        self.iterate_btn.pack()
-        
-        self.canvas = tk.Canvas(self,
-                                width = self.waves.w, 
-                                height = self.waves.h)
 
-        self.putWavesImage()
-        self.canvas.pack()
+        self.redraw_btn = ttk.Button(self.top_panel)
+        self.redraw_btn["text"] = "Redraw"
+        self.redraw_btn["command"] = self.putWavesImage
+
+        self.play_btn.grid(column = 0, row=0, padx=5, pady=5)
+
+        self.iterate_btn.grid(column = 1, row=0, padx=5, pady=5)
+        self.redraw_btn.grid(column = 2, row=0, padx=5, pady=5)
+        self.top_panel.pack()
+        self.middle_panel.pack()
+
+    def canvasDraw(self,event):
+        # Safe zone
+        padding = 40
+        x = self.clipValue(event.x,padding,self.w - padding)
+        y = self.clipValue(event.y,padding,self.h - padding)
+        self.waves.point(x,y,200,0.3)
+
+    def clipValue(self, val, min, max):
+        if(val < min):
+            val = min
+        elif(val > max):
+            val = max
+        return val
         
-app = Application()
+    def createCanvasWidgets(self):
+        self.canvas = tk.Canvas(self.middle_panel,
+                                width = self.waves.w,
+                                height = self.waves.h)
+        
+        self.canvas.bind("<Button-1>",self.canvasDraw)
+        self.canvas.pack()
+
+    def createColorSettingsWidgets(self):
+        self.colorFrame = ttk.Frame()
+        cF = self.colorFrame
+        chs = self.channels
+
+        rL = ttk.Label(cF,text="Red channel")
+        gL = ttk.Label(cF,text="Green channel")
+        bL = ttk.Label(cF,text="Blue channel")
+        aL = ttk.Label(cF,text="Alpha channel")
+
+        rO = ttk.OptionMenu(cF,
+                            chs['red'],
+                            *self.redCO
+                            )
+        gO = ttk.OptionMenu(cF,
+                            chs['green'],
+                            *self.greenCO
+                            )
+        bO = ttk.OptionMenu(cF,
+                            chs['blue'],
+                            *self.blueCO
+                            )
+        aO = ttk.OptionMenu(cF,
+                            chs['alpha'],
+                            *self.alphaCO
+                            )
+
+        # M for multiplier
+        # rgba for channel
+
+        rM = ttk.Entry(cF, textvariable=chs['redMultiplier'], width=5, justify="r")
+        gM = ttk.Entry(cF, textvariable=chs['greenMultiplier'], width=5, justify="r")
+        bM = ttk.Entry(cF, textvariable=chs['blueMultiplier'], width=5, justify="r")
+        aM = ttk.Entry(cF, textvariable=chs['alphaMultiplier'], width=5, justify="r")
+
+        # grid label
+
+        rL.grid(row=0, column=0)
+        gL.grid(row=0, column=1)
+        bL.grid(row=0, column=2)
+        aL.grid(row=0, column=3)
+
+        # grid combobox
+
+        rO.grid(row=1, column=0, padx=5, pady=5)
+        gO.grid(row=1, column=1, padx=5, pady=5)
+        bO.grid(row=1, column=2, padx=5, pady=5)
+        aO.grid(row=1, column=3, padx=5, pady=5)
+
+        # multipliers
+
+        rM.grid(row=2, column=0, sticky='e', padx=5)
+        gM.grid(row=2, column=1, sticky='e', padx=5)
+        bM.grid(row=2, column=2, sticky='e', padx=5)
+        aM.grid(row=2, column=3, sticky='e', padx=5)
+
+        self.colorFrame.pack(pady=10)
+
+
+master = tk.Tk()
+app = Application(master)
 app.master.title("Waves")
 app.mainloop()
 
