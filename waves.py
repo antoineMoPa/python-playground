@@ -16,7 +16,7 @@ class Waves:
         self.interval = 0.2
         self.heights = np.ones( (self.w,self.h), dtype=np.float32)
         self.speeds = np.zeros( (self.w,self.h), dtype=np.float32)
-        self.damping = 1
+        self.damping = 1.0
         self.heights /= 2
 
         self.image = 0
@@ -47,7 +47,7 @@ class Waves:
 
     def iterate(self):
         # we equilibrate with 4 cells so we divide effect of each cell by 4
-        factor = 1/4
+        factor = 1/8
         self.time += self.interval
         speeds = self.speeds
         heights = self.heights
@@ -110,17 +110,17 @@ class Waves:
                 mult = 1
 
             if (ch == "height"):
-                val = self.heights
+                val = mult * self.heights
             elif (ch == "speed"):
-                val = self.speeds
+                val = mult * self.speeds + 0.5
             elif (ch == "1"):
-                val = 1
+                val = mult * 1
             elif (ch == "0"):
                 val = 0
             else:
                 print("error: channel value is not handled")
 
-            self.data[:,:,i] = np.floor(mult * val * 255)
+            self.data[:,:,i] = np.floor(val * 255)
 
 class Application(ttk.Frame):
     def __init__(self, master = None):
@@ -231,7 +231,7 @@ class Application(ttk.Frame):
         padding = 40
         x = self.clipValue(event.x,padding,self.w - padding)
         y = self.clipValue(event.y,padding,self.h - padding)
-        self.waves.point(x,y,200,0.3)
+        self.waves.point(x,y,20,0.1)
 
     def clipValue(self, val, min, max):
         if(val < min):
@@ -245,6 +245,7 @@ class Application(ttk.Frame):
                                 width = self.waves.w,
                                 height = self.waves.h)
         
+        self.canvas.bind("<B1-Motion>",self.canvasDraw)
         self.canvas.bind("<Button-1>",self.canvasDraw)
         self.canvas.pack()
 
