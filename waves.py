@@ -29,7 +29,7 @@ class Waves:
         # their individual vertical speeds
         self.speeds = np.zeros( (self.w,self.h), dtype=np.float32 )
         # transmission factors
-        self.tfactors = np.ones( (self.w,self.h), dtype=np.float32 )
+        self.tfactors = np.ones( (self.w,self.h), dtype=np.float32 )/3
         # make heights equal to 0.5
         self.heights /= 2
         
@@ -42,7 +42,7 @@ class Waves:
         self.draw(channels)
         return Image.fromarray(self.data,'RGBA')
 
-    def point(self,i,j,radius,value, arr="heights"):
+    def point(self,i,j,radius,value, arr="heights", shape="pointsine"):
         i = math.floor(i)
         j = math.floor(j)
 
@@ -55,12 +55,17 @@ class Waves:
         else:
             print("error: arr must be either 'heights', 'speeds' or 'tfactors'")
             return
-
+        
+        if(shape == "pointsine"):
+            shape = lambda d: math.sin(20*(1-d / radius))
+        elif(shape == "point"):
+            shape = lambda d: (1-d / radius)
+            
         for k in range(i - radius,i + radius):
             for l in range(j - radius,j + radius):
                 d = self.dist(i,j,k,l)
                 if(d < radius):
-                    arr[k][l] += value * (1-d / radius)
+                    arr[k][l] += value * shape(d)
 
     def dist(self,x1,y1,x2,y2):
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
@@ -85,7 +90,7 @@ class Waves:
         h2 = np.roll(np.copy(heights),-1,axis=0)
         h3 = np.roll(np.copy(heights),1,axis=1)
         h4 = np.roll(np.copy(heights),-1,axis=1)
-
+        
         d1 = self.tfactors * factor * (heights - h1)
         d2 = self.tfactors * factor * (heights - h2)
         d3 = self.tfactors * factor * (heights - h3)
@@ -134,7 +139,7 @@ class Waves:
             elif (ch == "speed"):
                 val = mult * self.speeds + 0.5
             elif (ch == "tfactor"):
-                val = self.tfactors
+                val = mult * self.tfactors
             elif (ch == "1"):
                 val = mult * 1
             elif (ch == "0"):
@@ -260,13 +265,14 @@ class Application(ttk.Frame):
         y = self.clipValue(event.y,0,self.h)
 
         if(arr == "tfactors"):
-            size = 3
-            for i in range(y-size, y+size):
-                for j in range(x-size, x+size):
-                    self.waves.tfactors[i,j] = 0
-
+            #size = 3
+            #for i in range(y-size, y+size):
+            #    for j in range(x-size, x+size):
+            #        self.waves.tfactors[i,j] = 0
+            self.waves.point(y, x, 80, +0.1, arr=arr, shape="point")
+            self.waves.tfactors = np.clip(self.waves.tfactors,0.1,1)
         else:
-            self.waves.point(y, x, 20, 0.1, arr=arr)
+            self.waves.point(y, x, 20, 0.1, arr=arr, shape="pointsine")
 
 
     def clipValue(self, val, min, max):
