@@ -55,18 +55,26 @@ class Waves:
         else:
             print("error: arr must be either 'heights', 'speeds' or 'tfactors'")
             return
-        
-        if(shape == "pointsine"):
-            shape = lambda d: math.sin(20*(1-d / radius))
-        elif(shape == "point"):
-            shape = lambda d: (1-d / radius)
-            
-        for k in range(i - radius,i + radius):
-            for l in range(j - radius,j + radius):
-                d = self.dist(i,j,k,l)
-                if(d < radius):
-                    arr[k][l] += value * shape(d)
 
+        if(shape == "pointsine" or shape == "point"):
+            if(shape == "pointsine"):
+                shape = lambda d: math.sin(20*(1-d / radius))
+            elif(shape == "point"):
+                shape = lambda d: (1-d / radius)
+                
+                for k in range(i - radius,i + radius):
+                    for l in range(j - radius,j + radius):
+                        d = self.dist(i,j,k,l)
+                        if(d < radius):
+                            arr[k][l] += value * shape(d)
+        elif(shape == "lines"):
+            for k in range(i - radius,i + radius):
+                for l in range(j - radius,j + radius):
+                    d = self.dist(i,j,k,l)
+                    if(d < radius):
+                        arr[k][l] += (1-d/radius) * value * math.sin(k)
+
+            
     def dist(self,x1,y1,x2,y2):
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
 
@@ -272,7 +280,7 @@ class Application(ttk.Frame):
             self.waves.point(y, x, 80, +0.1, arr=arr, shape="point")
             self.waves.tfactors = np.clip(self.waves.tfactors,0.1,1)
         else:
-            self.waves.point(y, x, 20, 0.1, arr=arr, shape="pointsine")
+            self.waves.point(y, x, 20, 0.1, arr=arr, shape="lines")
 
 
     def clipValue(self, val, min, max):
