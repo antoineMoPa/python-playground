@@ -21,7 +21,3 @@ tramp
 
 # elpa packages
 /elpa/
-
-*.gif
-*.png
-*.jpg
