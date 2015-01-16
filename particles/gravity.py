@@ -16,7 +16,7 @@ class Simulation:
         self.interval = 0.2
         self.imagenum = 0
         self.image = Image.new("RGB", (self.w, self.h), (255, 255, 255))
-        self.imageDraw = ImageDraw.Draw(self.image)
+        self.imageDraw = ImageDraw.Draw(self.image,'RGBA')
         self.clear()
         # mouse
         self.x = 0
@@ -27,12 +27,12 @@ class Simulation:
             os.makedirs("./images")
 
     def clear(self):
-        self.particle_num = 140
+        self.particle_num = 0
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
         # x,y,speed x, speed y
         self.particles = np.zeros( (self.particle_num, 4), dtype=np.float16 )
-
+        
         for i in range(0, len(self.particles)):
             column = (i % 8)
             self.particles[i] = [150 + 20 *(column) + i/6, 40 + 1 * (i - column) + i, 0, 0]
@@ -44,12 +44,12 @@ class Simulation:
         #rec = canvas.create_rectangle(0, 0, self.w, self.h, fill="#ffffff")
 
         canvas.delete("all")
-        self.imageDraw.rectangle((0, 0, self.w, self.h),fill="#999999")
+        self.imageDraw.rectangle((0, 0, self.w, self.h),fill="#ffffff")
         for part in self.particles:
             radius = 5
             x,y = part[0], part[1]
             box = (x - radius, y - radius, x + radius, y + radius)
-            self.imageDraw.ellipse(box, fill="#000000")
+            self.imageDraw.ellipse(box, fill=(0,0,0,30))
 
         self.tkimage = ImageTk.PhotoImage(self.image)
         canvas.create_image((self.w/2, self.h/2),image=self.tkimage)
@@ -59,7 +59,7 @@ class Simulation:
         ps = self.particles
         
         # add gravity
-        self.particles[:,3] += 0.5
+        #self.particles[:,3] += 0.5
         deltaXs = np.zeros((len(ps),len(ps)))
         deltaYs = np.zeros((len(ps),len(ps)))
         
@@ -72,30 +72,15 @@ class Simulation:
         
         dists = np.sqrt(distsSQUARE)
         
-        factorsAttraction = 1/len(ps)**2 * np.power(1 - np.clip(dists,0,30) / 20, 2)
-        factorsRepulsion = np.power(1 - np.clip(dists,0,20) / 20, 2)
-        #ps[:,0] -= np.sum(factorsAttraction * deltaXs, axis=1)
-        #ps[:,1] -= np.sum(factorsAttraction * deltaYs, axis=1)
+        factorsAttraction = 1 / 4 * np.power(1 - (np.clip(dists,0,30)) / 30, 2)
+        factorsRepulsion = np.power(1 - (np.clip(dists,0,15)) / 15, 2)
+        ps[:,2] -= np.sum(factorsAttraction * deltaXs, axis=1)
+        ps[:,3] -= np.sum(factorsAttraction * deltaYs, axis=1)
         ps[:,2] += np.sum(factorsRepulsion * deltaXs, axis=1)
         ps[:,3] += np.sum(factorsRepulsion * deltaYs, axis=1)
-        # mouse gravity
         
-            #d = self.dist(p[0], p[1], self.x, self.y)
-            #treshold = 100
-            #if(d < treshold):
-            #    factor = self.gravity * (1-d/treshold)
-            #    deltaX = p[0] - self.x
-            #    deltaY = p[1] - self.y
-            #    p[2] += factor * (-1 * deltaX)
-            #    p[3] += factor * (-1 * deltaY)
-
-            # particle interaction
-
-        #0:00:00.077026
-        #0:00:00.058562
-        
-        self.particles[:,2] *= 0.9
-        self.particles[:,3] *= 0.9
+        #self.particles[:,2] *= 0.9
+        #self.particles[:,3] *= 0.9
         
         self.particles[:,0] += self.particles[:,2]
         self.particles[:,1] += self.particles[:,3]
@@ -111,13 +96,15 @@ class Simulation:
         # to optimize
         for i in range(0, len(self.particles)):
             p = self.particles[i]
-
-            # create walls
-            wallfactor = 0.01
+            
             limitDown = self.h - 10
             if(p[1] >= limitDown):
                 p[1] = limitDown
-                p[3] = 0
+                #p[3] = 0
+                
+            # friction at bottom
+            if(p[1] >= limitDown-20):
+                p[2] *= 0.3
             
             limitTop = 10
             if(p[1] <= limitTop):
@@ -232,15 +219,13 @@ class Application(ttk.Frame):
             self.simulation.x = event.x
             self.simulation.y = event.y
             
-        def activateGravity(event):
-            self.simulation.gravity = 1
-        
-        def deactivateGravity(event):
-            self.simulation.gravity = 0
+        def click(e):
+            ps = self.simulation.particles
+            ps = np.append(ps, [[e.x, e.y, 0, 0]], axis=0)
+            self.simulation.particles= ps
             
-        self.canvas.bind("<Motion>", updatePosition)
-        self.canvas.bind("<Button-1>", activateGravity)
-        self.canvas.bind("<ButtonRelease-1>", deactivateGravity)
+        #self.canvas.bind("<Motion>", motion)
+        self.canvas.bind("<Button-1>", click)
 
         self.canvas.pack()
 
