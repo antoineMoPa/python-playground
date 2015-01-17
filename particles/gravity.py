@@ -59,25 +59,29 @@ class Simulation:
         ps = self.particles
         
         # add gravity
-        #self.particles[:,3] += 0.5
+        self.particles[:,3] += 0.5
         deltaXs = np.zeros((len(ps),len(ps)))
         deltaYs = np.zeros((len(ps),len(ps)))
+        zeros = np.zeros((len(ps),len(ps)))
         
         for i in range(0, len(ps)):
             for j in range(0, len(ps)):
                 deltaXs[i, j] = ps[i, 0] - ps[j, 0]
                 deltaYs[i, j] = ps[i, 1] - ps[j, 1]
-            
+                      
         distsSQUARE = np.power(deltaXs,2) + np.power(deltaYs,2)
         
         dists = np.sqrt(distsSQUARE)
         
-        factorsAttraction = 1 / 4 * np.power(1 - (np.clip(dists,0,30)) / 30, 2)
-        factorsRepulsion = np.power(1 - (np.clip(dists,0,15)) / 15, 2)
-        ps[:,2] -= np.sum(factorsAttraction * deltaXs, axis=1)
-        ps[:,3] -= np.sum(factorsAttraction * deltaYs, axis=1)
-        ps[:,2] += np.sum(factorsRepulsion * deltaXs, axis=1)
-        ps[:,3] += np.sum(factorsRepulsion * deltaYs, axis=1)
+        #factorsAttraction = 1 / 4 * np.power(1 - (np.clip(dists,0,30)) / 30, 2)
+
+        dists_inverses = 1 / np.power(dists, 2)
+        dists_zeros = np.equal(zeros, dists)
+        dists_inverses = np.where(dists_zeros, zeros, dists_inverses)
+        ps[:,2] -= np.sum(1/3*dists_inverses * deltaXs, axis=0)
+        ps[:,3] -= np.sum(1/3*dists_inverses * deltaYs, axis=0)
+        ps[:,2] += np.sum(30*dists_inverses * deltaXs, axis=1)
+        ps[:,3] += np.sum(30*dists_inverses * deltaYs, axis=1)
         
         #self.particles[:,2] *= 0.9
         #self.particles[:,3] *= 0.9
@@ -103,8 +107,8 @@ class Simulation:
                 #p[3] = 0
                 
             # friction at bottom
-            if(p[1] >= limitDown-20):
-                p[2] *= 0.3
+            #if(p[1] >= limitDown-20):
+            #    p[2] *= 0.03
             
             limitTop = 10
             if(p[1] <= limitTop):
