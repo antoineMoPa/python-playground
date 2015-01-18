@@ -5,6 +5,7 @@ from PIL import Image, ImageTk, ImageDraw
 from datetime import datetime
 import numpy as np
 import math
+import time
 import os
 import sys
 from copy import *
@@ -46,7 +47,7 @@ class Simulation:
         canvas.delete("all")
         self.imageDraw.rectangle((0, 0, self.w, self.h),fill="#ffffff")
         for part in self.particles:
-            radius = 10
+            radius = 5
             x,y = part[0], part[1]
             box = (x - radius, y - radius, x + radius, y + radius)
             self.imageDraw.ellipse(box, fill=(0,0,0,30))
@@ -72,15 +73,16 @@ class Simulation:
                     
         distsSQUARE = np.power(deltaXs,2) + np.power(deltaYs,2)
         dists = np.sqrt(distsSQUARE)
-        dists_inverses = 1 / np.power(dists, 2)
+        dists_inverses = 1 / dists
         dists_inverses[dists == 0] = 0
-
-        rep = 30
         
-        #ps[:,2] -= rep * np.sum(dists_inverses * deltaXs, axis=0)
-        #ps[:,3] -= rep * np.sum(dists_inverses * deltaYs, axis=0)
-        ps[:,2] += rep * np.sum(dists_inverses * deltaXs, axis=1)
-        ps[:,3] += rep * np.sum(dists_inverses * deltaYs, axis=1)
+        rep = 3
+        att = -10
+        
+        ps[:,2] += att * np.sum(dists_inverses ** 2 * deltaXs, axis=1)
+        ps[:,3] += att * np.sum(dists_inverses ** 2 * deltaYs, axis=1)
+        ps[:,2] += rep * np.sum(dists_inverses ** 4 * deltaXs, axis=1)
+        ps[:,3] += rep * np.sum(dists_inverses ** 4 * deltaYs, axis=1)
         
         #self.particles[:,2] *= 0.9
         #self.particles[:,3] *= 0.9
@@ -90,8 +92,8 @@ class Simulation:
         self.particles[:,0] += self.particles[:,2]
         self.particles[:,1] += self.particles[:,3]
         
-        self.manageWalls()
-        self.saveImage()
+        #self.manageWalls()
+        #self.saveImage()
 
     def saveImage(self):
         self.imagenum += 1
@@ -126,6 +128,8 @@ class Simulation:
 class Application(ttk.Frame):
     def __init__(self, w, h, master = None):
         ttk.Frame.__init__(self, master)
+        self.total_time_between_frames = 0
+        self.total_frames = 0
         self.pack()
         self.w = w
         self.h = h
@@ -145,10 +149,32 @@ class Application(ttk.Frame):
         
         
     def iterate(self):
-        t = datetime.now()
+        res = 50
+
+        # time stats
+        if(self.total_frames == res):
+            # reset
+            self.total_frames = 0
+            self.total_time_between_frames = 0
+           
+        t = time.time()
+
+        # actual operation
         self.simulation.iterate()
         self.putSimulationImage()
-        print(datetime.now() - t)
+
+        # time stats
+        delta_t = time.time() - t
+        self.total_time_between_frames += delta_t
+        self.total_frames += 1
+
+        self.showStats()
+        
+    def showStats(self):
+        a = self.total_time_between_frames
+        b  = self.total_frames
+        average_time = a / b
+        print("Particles: "+str(len(self.simulation.particles))+" | Avg. frame time:" + str(int(average_time * (10 ** 3))))
         
     def putSimulationImage(self):
         self.simulation.createImage(self.canvas)
