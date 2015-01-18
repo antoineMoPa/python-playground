@@ -28,7 +28,7 @@ class Simulation:
             os.makedirs("./images")
 
     def clear(self):
-        self.particle_num = 0
+        self.particle_num = 80
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
         # x,y,speed x, speed y
@@ -42,15 +42,15 @@ class Simulation:
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
 
     def createImage(self, canvas):
-        #rec = canvas.create_rectangle(0, 0, self.w, self.h, fill="#ffffff")
-
         canvas.delete("all")
-        self.imageDraw.rectangle((0, 0, self.w, self.h),fill="#ffffff")
+        fill = (255, 255, 255, 255)
+        self.imageDraw.rectangle((0, 0, self.w, self.h),fill=fill)
         for part in self.particles:
             radius = 5
             x,y = part[0], part[1]
             box = (x - radius, y - radius, x + radius, y + radius)
-            self.imageDraw.ellipse(box, fill=(0,0,0,30))
+            self.imageDraw.ellipse(box,
+                                   fill=(0,0,0,15))
 
         self.tkimage = ImageTk.PhotoImage(self.image)
         canvas.create_image((self.w/2, self.h/2),image=self.tkimage)
@@ -76,24 +76,24 @@ class Simulation:
         dists_inverses = 1 / dists
         dists_inverses[dists == 0] = 0
         
-        rep = 3
-        att = -10
+        rep = 150
+        att = -5
         
         ps[:,2] += att * np.sum(dists_inverses ** 2 * deltaXs, axis=1)
         ps[:,3] += att * np.sum(dists_inverses ** 2 * deltaYs, axis=1)
-        ps[:,2] += rep * np.sum(dists_inverses ** 4 * deltaXs, axis=1)
-        ps[:,3] += rep * np.sum(dists_inverses ** 4 * deltaYs, axis=1)
-        
-        #self.particles[:,2] *= 0.9
-        #self.particles[:,3] *= 0.9
+        ps[:,2] += rep * np.sum(dists_inverses ** 3 * deltaXs, axis=1)
+        ps[:,3] += rep * np.sum(dists_inverses ** 3 * deltaYs, axis=1)
         # add gravity
         #self.particles[:,3] += 2
         
         self.particles[:,0] += self.particles[:,2]
         self.particles[:,1] += self.particles[:,3]
-        
+
+        self.particles[:,2] *= 0.1
+        self.particles[:,3] *= 0.1
+
         #self.manageWalls()
-        #self.saveImage()
+        self.saveImage()
 
     def saveImage(self):
         self.imagenum += 1
