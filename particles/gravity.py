@@ -28,16 +28,21 @@ class Simulation:
             os.makedirs("./images")
 
     def clear(self):
-        self.particle_num = 80
+        self.particle_num = 100
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
         # x,y,speed x, speed y
         self.particles = np.zeros( (self.particle_num, 4), dtype=np.float16 )
         
-        for i in range(0, len(self.particles)):
-            column = (i % 8)
-            self.particles[i] = [150 + 20 *(column) + i/6, 40 + 1 * (i - column) + i, 0, 0]
+        for i in range(0, int(len(self.particles)/2)):
+            column = (i % 5)
+            self.particles[i] = [50 + 20 *(column) + i/6, 40 + 1 * (i - column) + i, 0, 0]
 
+        for i in range(int(len(self.particles)/2), len(self.particles)):
+            column = (i % 5)
+            self.particles[i] = [300 + 20 *(column) + i/6, 280 + 1 * (i - column) + i, 0, 0]
+
+            
     def dist(self,x1,y1,x2,y2):
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
 
@@ -76,7 +81,7 @@ class Simulation:
         dists_inverses = 1 / dists
         dists_inverses[dists == 0] = 0
         
-        rep = 150
+        rep = 200
         att = -5
         
         ps[:,2] += att * np.sum(dists_inverses ** 2 * deltaXs, axis=1)
@@ -89,11 +94,11 @@ class Simulation:
         self.particles[:,0] += self.particles[:,2]
         self.particles[:,1] += self.particles[:,3]
 
-        self.particles[:,2] *= 0.1
-        self.particles[:,3] *= 0.1
+        self.particles[:,2] *= 0.8
+        self.particles[:,3] *= 0.8
 
         #self.manageWalls()
-        self.saveImage()
+        #self.saveImage()
 
     def saveImage(self):
         self.imagenum += 1
