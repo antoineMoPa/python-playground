@@ -82,9 +82,9 @@ class Simulation:
         dists_inverses[dists == 0] = 0
         
         #rep = 11800
-        rep = 10000
-        ps[:,2] += rep * np.sum(np.power(dists_inverses, 4) * deltaXs, axis=1)
-        ps[:,3] += rep * np.sum(np.power(dists_inverses, 4) * deltaYs, axis=1)
+        rep = 10 ** 5
+        ps[:,2] += rep * np.sum(np.power(dists_inverses, 5) * deltaXs, axis=1)
+        ps[:,3] += rep * np.sum(np.power(dists_inverses, 5) * deltaYs, axis=1)
         # add gravity
         self.particles[:,3] += 0.7
         
@@ -276,6 +276,6 @@ class Application(ttk.Frame):
         self.settingsFrame.pack(pady=10)
 
 master = tk.Tk()
-app = Application(700, 700, master)
+app = Application(600, 1000, master)
 app.master.title("Simulation")
 app.mainloop()
