@@ -47,12 +47,16 @@ class Simulation:
         canvas.delete("all")
         fill = (255, 255, 255, 255)
         self.imageDraw.rectangle((0, 0, self.w, self.h),fill=fill)
-        for part in self.particles:
+        for i in range(0, len(self.particles)):
+            part = self.particles[i]
             radius = 5
             x,y = part[0], part[1]
             box = (x - radius, y - radius, x + radius, y + radius)
+            red = 0
+            if self.fixed[i] == 1:
+                red = 255            
             self.imageDraw.ellipse(box,
-                                   fill=(0,0,0,15))
+                                   fill=(red,0,0,15))
 
         self.tkimage = ImageTk.PhotoImage(self.image)
         canvas.create_image((self.w/2, self.h/2),image=self.tkimage)
