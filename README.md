@@ -1,6 +1,6 @@
-# waves-playground
+# phys-playground
 
-Python code simulating waves
+Python code simulating waves, particles, fluid-like particles.
 
 # Installing
 
@@ -16,6 +16,6 @@ You also need to install Pillow:
   
     sudo pip-3.2 install Pillow
 
-# Running
+# Running code
 
-    python3.2 waves.py
+    python3 the-script-name.py
