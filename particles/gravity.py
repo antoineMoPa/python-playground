@@ -1,4 +1,3 @@
-# run specifying number of frames to render
 import tkinter as tk
 import tkinter.ttk as ttk
 from PIL import Image, ImageTk, ImageDraw
