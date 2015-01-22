@@ -28,16 +28,18 @@ class Simulation:
             os.makedirs("./images")
 
     def clear(self):
-        self.particle_num = 50
+        self.particle_num = 30
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
         # x,y,speed x, speed y
-        self.particles = np.zeros( (self.particle_num, 4), dtype=np.float16 )
+        self.particles = np.zeros( (self.particle_num, 6), dtype=np.float16 )
         self.fixed = np.zeros( (self.particle_num), dtype=bool )
         
         for i in range(0, int(len(self.particles))):
             column = (i % 5)
-            self.particles[i] = [200 + 20 *(column) + i/6, 40 + 3 * (i - column) + i, 0, 0]
+            y = 40 + 20 *(column) + i/6
+            x = 180 + 3 * (i - column) + i
+            self.particles[i] = [x, y, 0, 0, 0, 0]
 
             
     def dist(self,x1,y1,x2,y2):
@@ -49,7 +51,7 @@ class Simulation:
         self.imageDraw.rectangle((0, 0, self.w, self.h),fill=fill)
         for i in range(0, len(self.particles)):
             part = self.particles[i]
-            radius = 5
+            radius = 4
             x,y = part[0], part[1]
             box = (x - radius, y - radius, x + radius, y + radius)
             red = 0
@@ -66,6 +68,10 @@ class Simulation:
         ps = self.particles
         fixed = self.fixed
         
+        # reset acceleration
+        self.particles[:, 4] = 0
+        self.particles[:, 5] = 0
+        
         deltaXs = np.zeros((len(ps),len(ps)))
         deltaYs = np.zeros((len(ps),len(ps)))
         zeros = np.zeros((len(ps),len(ps)))
@@ -81,25 +87,37 @@ class Simulation:
         distsSQUARE = np.power(deltaXs,2) + np.power(deltaYs,2)
         dists = np.sqrt(distsSQUARE)
         
-        dists = np.where(dists[:,:] < 40, dists, 0)        
+        dists = np.where(dists[:,:] < 12, dists, 0)        
         dists_inverses = 1 / dists
         dists_inverses[dists == 0] = 0
         
         #rep = 11800
-        rep = 10 ** 5
-        ps[:,2] += rep * np.sum(np.power(dists_inverses, 5) * deltaXs, axis=1)
-        ps[:,3] += rep * np.sum(np.power(dists_inverses, 5) * deltaYs, axis=1)
+        rep = 100
+        #att = 3 * 10 ** 1
+        
+        ps[:,4] += rep * np.sum(np.power(dists_inverses, 3) * deltaXs, axis=1)
+        ps[:,5] += rep * np.sum(np.power(dists_inverses, 3) * deltaYs, axis=1)
+        #ps[:,4] -= att * np.sum(np.power(dists_inverses, 2) * deltaXs, axis=1)
+        #ps[:,5] -= att * np.sum(np.power(dists_inverses, 2) * deltaYs, axis=1)
+        
         # add gravity
-        self.particles[:,3] += 0.7
         
-        cond = fixed == 0
-        self.particles[cond, 0] += self.particles[cond,2]
-        self.particles[cond, 1] += self.particles[cond,3]
-
-        self.particles[:,2] *= 0.9
-        self.particles[:,3] *= 0.9
+        self.particles[fixed == 0,5] += 0.4
+        self.particles[:, 2] += self.particles[:,4]
+        self.particles[:, 3] += self.particles[:,5]
+                
+        self.particles[:, 0] += self.particles[:,2]
+        self.particles[:, 1] += self.particles[:,3]
         
-        #self.saveImage()
+        self.particles[:,3] *= 0.8
+        self.particles[:,4] *= 0.8
+        
+        self.particles[fixed == 1,2] *= 0.01
+        self.particles[fixed == 1,3] *= 0.01
+        
+        
+        
+        self.saveImage()
 
     def saveImage(self):
         self.imagenum += 1
@@ -240,13 +258,15 @@ class Application(ttk.Frame):
                 deltaX = e.x - lastX 
                 deltaY = e.y - lastY
                 dist = math.sqrt(deltaX ** 2 + deltaY ** 2)
-                number = int(dist/18)
+                number = int(dist/20)
+                if(number < 1):
+                    number = 1
                 for i in range(0, number):
                     x = i / number * deltaX + lastX
                     y = i / number * deltaY + lastY
                     ps = self.simulation.particles
                     fixed = self.simulation.fixed
-                    ps = np.append(ps, [[x, y, 0, 0]], axis=0)
+                    ps = np.append(ps, [[x, y, 0, 0, 0, 0]], axis=0)
                     self.simulation.fixed = np.append(self.simulation.fixed, 1)
                     self.simulation.particles= ps
                 self.putSimulationImage()
@@ -280,6 +300,6 @@ class Application(ttk.Frame):
         self.settingsFrame.pack(pady=10)
 
 master = tk.Tk()
-app = Application(600, 1000, master)
+app = Application(500, 500, master)
 app.master.title("Simulation")
 app.mainloop()
