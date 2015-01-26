@@ -45,8 +45,8 @@ class Simulation:
 
         for i in range(0,self.w):
             for j in range(0,self.h):
-                self.cReal[i,j] = self.multR * i / (self.w) - self.posR
-                self.cIm[i,j] = self.multI * j / (self.w) - self.posI
+                self.cReal[i,j] = self.multR * j / (self.w) - self.posR
+                self.cIm[i,j] = self.multI * i / (self.w) - self.posI
 
     def iterate(self):
         self.step += 1
@@ -66,7 +66,7 @@ class Simulation:
         self.im = b + self.cIm
         modulus = np.sqrt(self.real**2 + self.im**2)
         self.set[(self.set == 0) & ((modulus) > c)] = 255-self.step
-        #self.saveImage()
+        self.saveImage()
 
 
     def createImage(self, canvas):
