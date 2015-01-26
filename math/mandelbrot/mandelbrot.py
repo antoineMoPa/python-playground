@@ -86,19 +86,11 @@ class Simulation:
             # protect against overflow
             self.real[np.abs(self.real) > limit**2] = 0
             self.im[np.abs(self.im) > limit**2] = 0
-            # c = c**2 + c
+            # z = z**2 + c
             a = self.real
             b = self.im
             
             # square complex number
-            aTemp = (a**2 - b**2)
-            b = b*a + a*b
-            a = aTemp
-            
-            aTemp = (a**2 - b**2)
-            b = b*a + a*b
-            a = aTemp
-
             aTemp = (a**2 - b**2)
             b = b*a + a*b
             a = aTemp
