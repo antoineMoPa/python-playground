@@ -26,8 +26,8 @@ class Simulation:
     def clearC(self):
         # Initialize the values of c in z -> z**2 + c
         self.mult = 3
-        self.posR = -2
-        self.posI = -1.5
+        self.posR = 0
+        self.posI = 0
         
         self.c = 2
         
@@ -41,22 +41,21 @@ class Simulation:
         self.positionC()
 
     def positionC(self):
-        self.cReal = self.cReal / self.w  * self.mult + self.posR
-        self.cIm = self.cIm / self.w  * self.mult + self.posI
+        self.cReal = self.cReal / self.w  * self.mult + self.posR - 2
+        self.cIm = self.cIm / self.w  * self.mult + self.posI - 1.5
     
     def dePositionC(self):    
-        self.cReal = (self.cReal - self.posR) * self.w / self.mult
-        self.cIm = (self.cIm - self.posI) * self.w  / self.mult
+        self.cReal = (self.cReal - self.posR + 2) * self.w / self.mult
+        self.cIm = (self.cIm - self.posI + 1.5) * self.w  / self.mult
     
     def zoomC(self,coords,factor=0.5):
         self.dePositionC()
         self.mult *= factor
+        x = coords[0]/self.w
+        y = coords[1]/self.w
         if factor < 1:
-            self.posR += (coords[0]/self.w * self.mult) 
-            self.posI += (coords[1]/self.w * self.mult) 
-        else:
-            self.posR = -(coords[0]/self.w) * self.mult - 0.5
-            self.posI = -(coords[1]/self.w) * self.mult 
+            self.posR += (x * self.mult) 
+            self.posI += (y * self.mult) 
         
         self.positionC()
         self.clear()
@@ -71,7 +70,7 @@ class Simulation:
         # imaginary part
         self.im = np.zeros( (self.w,self.h), dtype=np.float32)
         # the set
-        self.set = np.zeros( (self.w,self.h), dtype=np.int8)
+        self.set = np.zeros( (self.w,self.h), dtype=np.int32)
         
         self.drawn = 0        
         self.iteration = 0
@@ -96,14 +95,13 @@ class Simulation:
             b = b*a + a*b
             a = aTemp
             
-            #aTemp = (a**2 - b**2)
-            #b = b*a + a*b
-            #a = aTemp
+            aTemp = (a**2 - b**2)
+            b = b*a + a*b
+            a = aTemp
 
-            #aTemp = (a**2 - b**2)
-            #b = b*a + a*b
-            #a = aTemp
-
+            aTemp = (a**2 - b**2)
+            b = b*a + a*b
+            a = aTemp
             
             # addition
             self.real = a + self.cReal
@@ -111,7 +109,7 @@ class Simulation:
             modulus = np.sqrt(self.real**2 + self.im**2)
             self.set[(self.set == 0) & ((modulus) > limit)] = step
             
-        #self.saveImage()
+        self.saveImage()
         self.drawn = 1
 
     def createImage(self, canvas):
@@ -289,5 +287,8 @@ class Application(ttk.Frame):
 
 master = tk.Tk()
 app = Application(500, 500, master)
+print("use click to zoom and right click to unzoom")
 app.master.title("Simulation")
 app.mainloop()
+
+
