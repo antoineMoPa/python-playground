@@ -34,7 +34,7 @@ class Simulation:
         # imaginary part
         self.im = np.zeros( (self.w,self.h), dtype=np.float32)
         # the set
-        self.set = np.zeros( (self.w,self.h), dtype=np.uint8)
+        self.set = np.zeros( (self.w,self.h), dtype=np.int8)
         
         self.multR = 3
         self.multI = 3
@@ -48,23 +48,22 @@ class Simulation:
     
     def iterate(self):
         self.step += 1
-        c = 4
+        c = 2
         self.real[np.abs(self.real) > c**2] = 0
         self.im[np.abs(self.im) > c**2] = 0
-
+        # c = c**2 + c
         a = self.real
         b = self.im
-        min = -1
-        max = 1
+
         # square complex number
         aTemp = (a**2 - b**2)
         b = b*a + a*b
         a = aTemp
-        
+        # addition
         self.real = a + self.real
         self.im = b + self.im        
         modulus = np.sqrt(self.real**2 + self.im**2)                
-        self.set[(self.set == 0) & (np.abs(modulus) > c)] = self.step + 30        
+        self.set[(self.set == 0) & ((modulus) > c)] = 255-self.step
         #self.saveImage()
 
             
