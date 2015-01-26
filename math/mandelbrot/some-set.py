@@ -16,11 +16,12 @@ class Simulation:
         self.time = 0
         self.interval = 0.2
         self.imagenum = 0
+        self.mult = 1
+        self.posR = 0
+        self.posI = 0
+
         self.clear()
-        # mouse
-        self.x = 0
-        self.y = 0
-        
+ 
         if not os.path.exists("./images"):
             os.makedirs("./images")
 
@@ -35,17 +36,12 @@ class Simulation:
         self.im = np.zeros( (self.w,self.h), dtype=np.float32)
         # the set
         self.set = np.zeros( (self.w,self.h), dtype=np.int8)
-        
-        self.multR = 3
-        self.multI = 3
-        self.posR = 2
-        self.posI = 1.5
-        
+                
         for i in range(0,self.w):
             for j in range(0,self.h):
-                self.real[i,j] = self.multR * i / (self.w) - self.posR
-                self.im[i,j] = self.multI * j / (self.w) - self.posI
-    
+                self.real[i,j] = self.mult * j / (self.w) + self.posR
+                self.im[i,j] = self.mult * i / (self.w) + self.posI
+                
     def iterate(self):
         self.step += 1
         c = 2
@@ -64,14 +60,14 @@ class Simulation:
         self.im = b + self.im        
         modulus = np.sqrt(self.real**2 + self.im**2)                
         self.set[(self.set == 0) & ((modulus) > c)] = 255-self.step
-        #self.saveImage()
+        self.saveImage()
 
             
     def createImage(self, canvas):
         canvas.delete("all")
-        self.data[:,:,0] = self.set
-        self.data[:,:,1] = self.set
-        self.data[:,:,2] = self.set
+        self.data[:,:,0] = self.set%20/20*255
+        self.data[:,:,1] = self.set%10/10*255
+        self.data[:,:,2] = self.set%5/5*255
         self.data[:,:,3] = 255
         self.image = Image.fromarray(self.data,'RGBA')
         self.tkimage = ImageTk.PhotoImage(self.image)
@@ -115,6 +111,13 @@ class Application(ttk.Frame):
            
         t = time.time()
 
+        # pass settings
+        try:
+            self.simulation.iterations = int(self.iterations_num.get())
+        except:
+            pass
+
+        
         # actual operation
         self.simulation.iterate()
         self.putSimulationImage()
@@ -202,18 +205,32 @@ class Application(ttk.Frame):
         self.canvas = tk.Canvas(self.middle_panel,
                                 width = self.simulation.w,
                                 height = self.simulation.h)
+        
+        def left(e=None):
+            self.simulation.posR -= 1/10 * self.simulation.mult
+            self.simulation.clear() 
+        def right(e=None):
+            self.simulation.posR += 1/10 * self.simulation.mult
+            self.simulation.clear()
+        def top(e):
+            self.simulation.posI -= 1/10 * self.simulation.mult
+            self.simulation.clear()
+        def bottom(e):
+            self.simulation.posI += 1/10 * self.simulation.mult
+            self.simulation.clear()
+        def zoom(e):
+            self.simulation.mult *= 0.5
+            x = e.x/self.w
+            y = e.y/self.w
+            self.simulation.posR += (x * self.simulation.mult) 
+            self.simulation.posI += (y * self.simulation.mult)
+            self.simulation.clear()
 
-        def updatePosition(event):
-            self.simulation.x = event.x
-            self.simulation.y = event.y
-            
-        def click(e):
-            ps = self.simulation.particles
-            ps = np.append(ps, [[e.x, e.y, 0, 0]], axis=0)
-            self.simulation.particles= ps
-            
-        #self.canvas.bind("<Motion>", motion)
-        self.canvas.bind("<Button-1>", click)
+        self.master.bind("<w>", top)
+        self.master.bind("<s>", bottom)
+        self.master.bind("<a>", left)
+        self.master.bind("<d>", right)
+        self.master.bind("<Button-1>", zoom)
 
         self.canvas.pack()
 
@@ -221,7 +238,7 @@ class Application(ttk.Frame):
         # you can create settings and use them in your simulation
         self.settingsFrame = tk.Frame()
         self.somesetting = tk.StringVar()
-
+        
         self.somesetting.set(3)
 
         someSettingLabel = ttk.Label(self.settingsFrame,
