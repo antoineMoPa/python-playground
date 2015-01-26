@@ -122,9 +122,9 @@ class Simulation:
         self.particles[:, 0] += self.particles[:,2]
         self.particles[:, 1] += self.particles[:,3]
 
-        # ambiant friction
-        self.particles[:,3] *= 0.8
-        self.particles[:,4] *= 0.8
+        # ambiant friction (damp speeds)
+        self.particles[:,3] *= 0.96
+        self.particles[:,4] *= 0.96
 
         self.saveImage()
 
