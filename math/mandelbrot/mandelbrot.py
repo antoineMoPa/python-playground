@@ -16,7 +16,7 @@ class Simulation:
         self.time = 0
         self.interval = 0.2
         self.imagenum = 0
-                
+        
         self.clearC()
         self.clear()
         
@@ -25,11 +25,9 @@ class Simulation:
     
     def clearC(self):
         # Initialize the values of c in z -> z**2 + c
-        
-        multR = 3
-        multI = 3
-        posR = 2
-        posI = 1.5
+        self.mult = 3
+        self.posR = -2
+        self.posI = -1.5
         
         self.c = 2
         
@@ -37,9 +35,32 @@ class Simulation:
         self.cIm = np.zeros((self.w,self.h), dtype=np.float32)
         for i in range(0,self.w):
             for j in range(0,self.h):
-                self.cReal[i,j] = multR * j / (self.w) - posR
-                self.cIm[i,j] = multI * i / (self.w) - posI
+                self.cReal[i,j] = j
+                self.cIm[i,j] = i
+                
+        self.positionC()
 
+    def positionC(self):
+        self.cReal = self.cReal / self.w  * self.mult + self.posR
+        self.cIm = self.cIm / self.w  * self.mult + self.posI
+    
+    def dePositionC(self):    
+        self.cReal = (self.cReal - self.posR) * self.w / self.mult
+        self.cIm = (self.cIm - self.posI) * self.w  / self.mult
+    
+    def zoomC(self,coords,factor=0.5):
+        self.dePositionC()
+        self.mult *= factor
+        if factor < 1:
+            self.posR += (coords[0]/self.w * self.mult) 
+            self.posI += (coords[1]/self.w * self.mult) 
+        else:
+            self.posR = -(coords[0]/self.w) * self.mult - 0.5
+            self.posI = -(coords[1]/self.w) * self.mult 
+        
+        self.positionC()
+        self.clear()
+        
     def clear(self):
         self.step = 0
         # rgba data container
@@ -75,10 +96,14 @@ class Simulation:
             b = b*a + a*b
             a = aTemp
             
-            aTemp = (a**2 - b**2)
-            b = b*a + a*b
-            a = aTemp
-            
+            #aTemp = (a**2 - b**2)
+            #b = b*a + a*b
+            #a = aTemp
+
+            #aTemp = (a**2 - b**2)
+            #b = b*a + a*b
+            #a = aTemp
+
             
             # addition
             self.real = a + self.cReal
@@ -183,36 +208,24 @@ class Application(ttk.Frame):
         self.play_btn = ttk.Button(self.top_panel)
         self.play_btn["text"] = "Play"
         self.play_btn["command"] = self.play
-
+        
         self.redraw_btn = ttk.Button(self.top_panel)
         self.redraw_btn["text"] = "Redraw"
         self.redraw_btn["command"] = self.simulation.clear
-
+        
+        def clear():
+            self.simulation.clearC()
+            self.simulation.clear()
+        
         self.clear_btn = ttk.Button(self.top_panel)
         self.clear_btn["text"] = "Clear"
-        self.clear_btn["command"] = self.simulation.clear
+        self.clear_btn["command"] = clear
 
         self.play_btn.grid(column = 0, row=0, padx=5, pady=5)        
         self.redraw_btn.grid(column = 1, row=0, padx=5, pady=5)
         self.clear_btn.grid(column = 2, row=0, padx=5, pady=5)
         self.top_panel.pack()
         self.middle_panel.pack()
-
-    def canvasDraw(self,event,arr):
-        # Safe zone
-        x = self.clipValue(event.x,0,self.w)
-        y = self.clipValue(event.y,0,self.h)
-
-        if(arr == "tfactors"):
-            #size = 3
-            #for i in range(y-size, y+size):
-            #    for j in range(x-size, x+size):
-            #        self.simulation.tfactors[i,j] = 0
-            self.simulation.point(y, x, 80, +0.1, arr=arr, shape="point")
-            self.simulation.tfactors = np.clip(self.simulation.tfactors,0.1,1)
-        else:
-            self.simulation.point(y, x, 20, 0.1, arr=arr, shape="pointsine")
-
 
     def clipValue(self, val, min, max):
         if(val < min):
@@ -226,33 +239,28 @@ class Application(ttk.Frame):
                                 width = self.simulation.w,
                                 height = self.simulation.h)
         
-        self.zoom = 10
-        
         def left(e=None):
-            self.simulation.cReal -= 1/self.zoom
+            self.simulation.cReal -= 1/10 * self.simulation.mult
             self.simulation.clear() 
         def right(e=None):
-            self.simulation.cReal += 1/self.zoom
+            self.simulation.cReal += 1/10 * self.simulation.mult
             self.simulation.clear()
         def top(e):
-            self.simulation.cIm -= 1/self.zoom
+            self.simulation.cIm -= 1/10 * self.simulation.mult
             self.simulation.clear()
         def bottom(e):
-            self.simulation.cIm += 1/self.zoom
+            self.simulation.cIm += 1/10 * self.simulation.mult
             self.simulation.clear()
-        def zoomIn(e):
-            self.simulation.cReal *= 0.9
-            self.simulation.cIm *= 0.9
-            self.simulation.clear()
-        def zoomOut(e):
-            self.simulation.cReal *= 1.1
-            self.simulation.cIm *= 1.1
-            self.simulation.clear()
-
-        self.master.bind("<Left>", left)
-        self.master.bind("<Right>", right)
-        self.master.bind("<Up>", zoomIn)
-        self.master.bind("<Down>", zoomOut)
+            
+        def zoom(e):
+            self.simulation.zoomC((e.x,e.y))
+            
+        def unzoom(e):
+            self.simulation.zoomC((e.x,e.y),2)
+            
+        self.canvas.bind("<Button-1>",zoom)
+        self.canvas.bind("<Button-3>",unzoom)
+            
         self.master.bind("<w>", top)
         self.master.bind("<s>", bottom)
         self.master.bind("<a>", left)
