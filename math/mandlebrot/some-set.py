@@ -20,7 +20,7 @@ class Simulation:
         # mouse
         self.x = 0
         self.y = 0
-
+        
         if not os.path.exists("./images"):
             os.makedirs("./images")
 
@@ -28,26 +28,24 @@ class Simulation:
         self.step = 0
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
-
-        self.cReal = np.zeros((self.w,self.h), dtype=np.float32)
-        self.cIm = np.zeros((self.w,self.h), dtype=np.float32)
+        
         # real part
         self.real = np.zeros( (self.w,self.h), dtype=np.float32)
         # imaginary part
         self.im = np.zeros( (self.w,self.h), dtype=np.float32)
         # the set
         self.set = np.zeros( (self.w,self.h), dtype=np.int8)
-
+        
         self.multR = 3
         self.multI = 3
         self.posR = 2
         self.posI = 1.5
-
+        
         for i in range(0,self.w):
             for j in range(0,self.h):
-                self.cReal[i,j] = self.multR * i / (self.w) - self.posR
-                self.cIm[i,j] = self.multI * j / (self.w) - self.posI
-
+                self.real[i,j] = self.multR * i / (self.w) - self.posR
+                self.im[i,j] = self.multI * j / (self.w) - self.posI
+    
     def iterate(self):
         self.step += 1
         c = 2
@@ -62,13 +60,13 @@ class Simulation:
         b = b*a + a*b
         a = aTemp
         # addition
-        self.real = a + self.cReal
-        self.im = b + self.cIm
-        modulus = np.sqrt(self.real**2 + self.im**2)
+        self.real = a + self.real
+        self.im = b + self.im        
+        modulus = np.sqrt(self.real**2 + self.im**2)                
         self.set[(self.set == 0) & ((modulus) > c)] = 255-self.step
         #self.saveImage()
 
-
+            
     def createImage(self, canvas):
         canvas.delete("all")
         self.data[:,:,0] = self.set
@@ -78,11 +76,11 @@ class Simulation:
         self.image = Image.fromarray(self.data,'RGBA')
         self.tkimage = ImageTk.PhotoImage(self.image)
         canvas.create_image((self.w/2, self.h/2),image=self.tkimage)
-
+                
     def saveImage(self):
         self.imagenum += 1
         self.image.save("./images/image-"+str(self.imagenum).zfill(6)+".png")
-
+            
 class Application(ttk.Frame):
     def __init__(self, w, h, master = None):
         ttk.Frame.__init__(self, master)
@@ -104,8 +102,8 @@ class Application(ttk.Frame):
         if(self.playing == 1):
             self.iterate()
         self.after(20, self.refresh)
-
-
+        
+        
     def iterate(self):
         res = 50
 
@@ -114,7 +112,7 @@ class Application(ttk.Frame):
             # reset
             self.total_frames = 0
             self.total_time_between_frames = 0
-
+           
         t = time.time()
 
         # actual operation
@@ -127,13 +125,13 @@ class Application(ttk.Frame):
         self.total_frames += 1
 
         self.showStats()
-
+        
     def showStats(self):
         a = self.total_time_between_frames
         b  = self.total_frames
         average_time = a / b
         print("Avg. frame time:" + str(int(average_time * (10 ** 3))))
-
+        
     def putSimulationImage(self):
         self.simulation.createImage(self.canvas)
 
@@ -161,7 +159,7 @@ class Application(ttk.Frame):
         self.iterate_btn = ttk.Button(self.top_panel)
         self.iterate_btn["text"] = "Iterate"
         self.iterate_btn["command"] = self.iterate
-
+        
         self.redraw_btn = ttk.Button(self.top_panel)
         self.redraw_btn["text"] = "Redraw"
         self.redraw_btn["command"] = self.putSimulationImage
@@ -208,12 +206,12 @@ class Application(ttk.Frame):
         def updatePosition(event):
             self.simulation.x = event.x
             self.simulation.y = event.y
-
+            
         def click(e):
             ps = self.simulation.particles
             ps = np.append(ps, [[e.x, e.y, 0, 0]], axis=0)
             self.simulation.particles= ps
-
+            
         #self.canvas.bind("<Motion>", motion)
         self.canvas.bind("<Button-1>", click)
 
