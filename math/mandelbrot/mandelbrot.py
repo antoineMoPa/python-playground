@@ -8,6 +8,7 @@ import time
 import os
 import sys
 from copy import *
+import wave
 
 class Simulation:
     def __init__(self,w,h):
@@ -267,7 +268,7 @@ class Application(ttk.Frame):
         self.settingsFrame = tk.Frame()
         self.iterations_num = tk.StringVar()
 
-        self.iterations_num.set(120)
+        self.iterations_num.set(20)
 
         iterations_numLabel = ttk.Label(self.settingsFrame,
                                      text="max iterations")
@@ -280,10 +281,25 @@ class Application(ttk.Frame):
 
         self.settingsFrame.pack(pady=10)
 
-master = tk.Tk()
-app = Application(500, 500, master)
-print("use click to zoom and right click to unzoom")
-app.master.title("Simulation")
-app.mainloop()
+SECOND = 44100
+sound = wave.open('sound.wav', 'w')
+sound.setparams((1, 1, SECOND, 0, 'NONE', 'not compressed'))
+data = bytearray()
+for i in range(0,44100):
+    s = int(128.0*math.sin(2*3.14*440*i/SECOND)+128)
+    data.append(s)
+    s = int(128.0*math.sin(2*3.14*420*i/SECOND)+128)
+    data.append(s)
+
+    
+sound.writeframes(data)
+sound.close()
+
+
+#master = tk.Tk()
+#app = Application(500, 500, master)
+#print("use click to zoom and right click to unzoom")
+#app.master.title("Simulation")
+#app.mainloop()
 
 
