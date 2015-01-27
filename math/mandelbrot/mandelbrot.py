@@ -17,6 +17,10 @@ class Simulation:
         self.interval = 0.2
         self.imagenum = 0
         
+        self.mult = 3
+        self.posR = 0
+        self.posI = 0
+        
         self.clearC()
         self.clear()
         
@@ -25,14 +29,10 @@ class Simulation:
     
     def clearC(self):
         # Initialize the values of c in z -> z**2 + c
-        self.mult = 3
-        self.posR = 0
-        self.posI = 0
-        
         self.c = 2
         
-        self.cReal = np.zeros((self.w,self.h), dtype=np.float32)
-        self.cIm = np.zeros((self.w,self.h), dtype=np.float32)
+        self.cReal = np.zeros((self.w,self.h), dtype=np.float64)
+        self.cIm = np.zeros((self.w,self.h), dtype=np.float64)
         for i in range(0,self.w):
             for j in range(0,self.h):
                 self.cReal[i,j] = j
@@ -49,8 +49,10 @@ class Simulation:
         self.cIm = (self.cIm - self.posI + 1.5) * self.w  / self.mult
     
     def zoomC(self,coords,factor=0.5):
+        self.clearC()
         self.dePositionC()
         self.mult *= factor
+        print("Zoom multiplier: "+str(self.mult))
         x = coords[0]/self.w
         y = coords[1]/self.w
         if factor < 1:
@@ -81,6 +83,7 @@ class Simulation:
             return
         step = 0
         limit = 2
+        
         for iteration in range(0,self.iterations):
             step += 1
             # protect against overflow
@@ -264,7 +267,7 @@ class Application(ttk.Frame):
         self.settingsFrame = tk.Frame()
         self.iterations_num = tk.StringVar()
 
-        self.iterations_num.set(10)
+        self.iterations_num.set(120)
 
         iterations_numLabel = ttk.Label(self.settingsFrame,
                                      text="max iterations")
