@@ -9,6 +9,7 @@ import os
 import sys
 from copy import *
 import wave
+from os import system
 
 class Simulation:
     def __init__(self,w,h):
@@ -122,6 +123,27 @@ class Simulation:
         self.imagenum += 1
         self.image.save("./images/image-"+str(self.imagenum).zfill(6)+".png")
 
+    def play_audio(self):
+        SECOND = 44100
+        sound = wave.open('sound.wav', 'w')
+        sound.setparams((1, 1, SECOND, 0, 'NONE', 'not compressed'))
+        data = bytearray()
+        set = self.set
+        
+        audio = np.sum(set,axis=1)
+        max = np.max(audio)
+        audio = audio / max
+        print(np.min(audio))
+        for r in range (0,4):
+            for i in range(0,len(audio)):
+                s = int(127*audio[i]+127)
+                data.append(s)
+            
+        sound.writeframes(data)
+        sound.close()
+        system("aplay sound.wav")
+
+        
 class Application(ttk.Frame):
     def __init__(self, w, h, master = None):
         ttk.Frame.__init__(self, master)
@@ -142,9 +164,8 @@ class Application(ttk.Frame):
     def refresh(self):
         if(self.playing == 1):
             self.iterate()
-        self.after(20, self.refresh)
-
-
+        self.after(20, self.refresh)    
+    
     def iterate(self):
         res = 50
         
@@ -215,9 +236,14 @@ class Application(ttk.Frame):
         self.clear_btn["text"] = "Clear"
         self.clear_btn["command"] = clear
 
+        self.play_audio_btn = ttk.Button(self.top_panel)
+        self.play_audio_btn["text"] = "Play audio"
+        self.play_audio_btn["command"] = self.simulation.play_audio
+        
         self.play_btn.grid(column = 0, row=0, padx=5, pady=5)        
         self.redraw_btn.grid(column = 1, row=0, padx=5, pady=5)
         self.clear_btn.grid(column = 2, row=0, padx=5, pady=5)
+        self.play_audio_btn.grid(column = 3, row=0, padx=5, pady=5)
         self.top_panel.pack()
         self.middle_panel.pack()
 
@@ -281,25 +307,10 @@ class Application(ttk.Frame):
 
         self.settingsFrame.pack(pady=10)
 
-SECOND = 44100
-sound = wave.open('sound.wav', 'w')
-sound.setparams((1, 1, SECOND, 0, 'NONE', 'not compressed'))
-data = bytearray()
-for i in range(0,44100):
-    s = int(128.0*math.sin(2*3.14*440*i/SECOND)+128)
-    data.append(s)
-    s = int(128.0*math.sin(2*3.14*420*i/SECOND)+128)
-    data.append(s)
-
-    
-sound.writeframes(data)
-sound.close()
-
-
-#master = tk.Tk()
-#app = Application(500, 500, master)
-#print("use click to zoom and right click to unzoom")
-#app.master.title("Simulation")
-#app.mainloop()
+master = tk.Tk()
+app = Application(500, 500, master)
+print("use click to zoom and right click to unzoom")
+app.master.title("Simulation")
+app.mainloop()
 
 
