@@ -56,8 +56,8 @@ class Simulation:
         self.dePositionC()
         self.mult *= factor
         print("Zoom multiplier: "+str(self.mult))
-        x = coords[0]/self.w
-        y = coords[1]/self.w
+        x = coords[1]/self.w
+        y = coords[0]/self.w
         if factor < 1:
             self.posR += (x * self.mult) 
             self.posI += (y * self.mult) 
@@ -312,7 +312,7 @@ class Application(ttk.Frame):
         self.settingsFrame.pack(pady=10)
 
 master = tk.Tk()
-app = Application(500, 500, master)
+app = Application(1000, 1000, master)
 print("use click to zoom and right click to unzoom")
 app.master.title("Simulation")
 app.mainloop()

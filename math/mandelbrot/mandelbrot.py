@@ -56,8 +56,8 @@ class Simulation:
         self.dePositionC()
         self.mult *= factor
         print("Zoom multiplier: "+str(self.mult))
-        x = coords[0]/self.w
-        y = coords[1]/self.w
+        x = coords[1]/self.w
+        y = coords[0]/self.w
         if factor < 1:
             self.posR += (x * self.mult) 
             self.posI += (y * self.mult) 
