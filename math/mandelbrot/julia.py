@@ -25,35 +25,32 @@ class Simulation:
         self.posR = 0
         self.posI = 0
         
-        self.clearC()
+        self.cReal = 1
+        self.cIm = 0
+        
+        self.clearZ()
         self.clear()
         
         if not os.path.exists("./images"):
             os.makedirs("./images")
     
-    def clearC(self):
-        # Initialize the values of c in z -> z**2 + c                
-        self.cReal = np.indices((self.w,self.h),dtype=np.float64)[0]
-        self.cIm = np.indices((self.w,self.h),dtype=np.float64)[1]
-        
-        #for i in range(0,self.w):
-        #    for j in range(0,self.h):
-        #        self.cReal[i,j] = j
-        #        self.cIm[i,j] = i
-                
-        self.positionC()
+    def clearZ(self):
+        # Initialize the values of z in z -> z**2 + c                
+        self.zReal = np.indices((self.w,self.h),dtype=np.float64)[0]
+        self.zIm = np.indices((self.w,self.h),dtype=np.float64)[1]                
+        self.positionZ()
 
-    def positionC(self):
-        self.cReal = self.cReal / self.w  * self.mult + self.posR - 2
-        self.cIm = self.cIm / self.w  * self.mult + self.posI - 1.5
+    def positionZ(self):
+        self.zReal = self.zReal / self.w  * self.mult + self.posR - 2
+        self.zIm = self.zIm / self.w  * self.mult + self.posI - 1.5
     
-    def dePositionC(self):    
-        self.cReal = (self.cReal - self.posR + 2) * self.w / self.mult
-        self.cIm = (self.cIm - self.posI + 1.5) * self.w  / self.mult
+    def dePositionZ(self):    
+        self.zReal = (self.zReal - self.posR + 2) * self.w / self.mult
+        self.zIm = (self.zIm - self.posI + 1.5) * self.w  / self.mult
     
-    def zoomC(self,coords,factor=0.5):
-        self.clearC()
-        self.dePositionC()
+    def zoomZ(self,coords,factor=0.5):
+        self.clearZ()
+        self.dePositionZ()
         self.mult *= factor
         print("Zoom multiplier: "+str(self.mult))
         x = coords[1]/self.w
@@ -62,18 +59,14 @@ class Simulation:
             self.posR += (x * self.mult) 
             self.posI += (y * self.mult) 
         
-        self.positionC()
+        self.positionZ()
         self.clear()
         
     def clear(self):
         self.step = 0
         # rgba data container
         self.data = np.ones( (self.w,self.h,4), dtype=np.uint8)
-
-        # real part
-        self.real = np.zeros( (self.w,self.h), dtype=np.float32)
-        # imaginary part
-        self.im = np.zeros( (self.w,self.h), dtype=np.float32)
+        
         # the set
         self.set = np.zeros( (self.w,self.h), dtype=np.int32)
         
@@ -90,11 +83,11 @@ class Simulation:
         for iteration in range(0,self.iterations):
             step += 1
             # protect against overflow
-            self.real[np.abs(self.real) > limit**2] = 0
-            self.im[np.abs(self.im) > limit**2] = 0
+            self.zReal[np.abs(self.zReal) > limit**2] = 0
+            self.zIm[np.abs(self.zIm) > limit**2] = 0
             # z = z**2 + c
-            a = self.real
-            b = self.im
+            a = self.zReal
+            b = self.zIm
             
             # square complex number
             aTemp = (a**2 - b**2)
@@ -102,9 +95,9 @@ class Simulation:
             a = aTemp
             
             # addition
-            self.real = a + self.cReal
-            self.im = b + self.cIm
-            modulus = np.sqrt(self.real**2 + self.im**2)
+            self.zReal = a + self.cReal
+            self.zIm = b + self.cIm
+            modulus = np.sqrt(self.zReal**2 + self.zIm**2)
             self.set[(self.set == 0) & ((modulus) > limit)] = step
             
         self.saveImage()
@@ -185,6 +178,8 @@ class Application(ttk.Frame):
         try:
             self.simulation.iterations = int(self.iterations_num.get())
             self.simulation.limit = int(self.limit.get())
+            self.simulation.cReal = int(self.cReal.get())
+            self.simulation.cIm = int(self.cIm.get())
         except:
             pass
 
@@ -234,7 +229,7 @@ class Application(ttk.Frame):
         self.redraw_btn["command"] = self.simulation.clear
         
         def clear():
-            self.simulation.clearC()
+            self.simulation.clearZ()
             self.simulation.clear()
         
         self.clear_btn = ttk.Button(self.top_panel)
@@ -246,9 +241,10 @@ class Application(ttk.Frame):
         self.play_audio_btn["command"] = self.simulation.play_audio
         
         self.iterations_num = tk.StringVar()
-        self.iterations_num.set(40)
+        self.iterations_num.set(40)        
+    
         iterations_numLabel = ttk.Label(self.top_panel,
-                                     text="max iterations")
+                                        text="max iterations")
         iterations_num = ttk.Entry(self.top_panel,
                                 textvariable=self.iterations_num,
                                 width=5, justify="r")
@@ -261,7 +257,26 @@ class Application(ttk.Frame):
                                 textvariable=self.limit,
                                 width=5, justify="r")
 
+        
+        self.cReal = tk.StringVar()
+        self.cReal.set(1)
+        cRealLabel = ttk.Label(self.top_panel,
+                                     text="real part of c")
+        cReal_input = ttk.Entry(self.top_panel,
+                                textvariable=self.cReal,
+                                width=5, justify="r")
 
+        self.cIm = tk.StringVar()
+        self.cIm.set(1)
+
+        cImLabel = ttk.Label(self.top_panel,
+                                     text="imaginary part of c")
+        cIm_input = ttk.Entry(self.top_panel,
+                                textvariable=self.cIm,
+                                width=5, justify="r")
+
+        
+        
         self.play_btn.grid(column = 0, row=0, padx=5, pady=5)        
         self.redraw_btn.grid(column = 1, row=0, padx=5, pady=5)
         self.clear_btn.grid(column = 2, row=0, padx=5, pady=5)
@@ -270,6 +285,10 @@ class Application(ttk.Frame):
         iterations_num.grid(column=4, row=1)
         limitLabel.grid(column=5, row=0,)
         limit.grid(column=5, row=1)
+        cRealLabel.grid(column=6, row=0,)
+        cReal_input.grid(column=6, row=1)
+        cImLabel.grid(column=7, row=0,)
+        cIm_input.grid(column=7, row=1)
 
         
         self.top_panel.pack()
@@ -288,23 +307,23 @@ class Application(ttk.Frame):
                                 height = self.simulation.h)
         
         def left(e=None):
-            self.simulation.cIm -= 1/10 * self.simulation.mult
+            self.simulation.zIm -= 1/10 * self.simulation.mult
             self.simulation.clear() 
         def right(e=None):
-            self.simulation.cIm += 1/10 * self.simulation.mult
+            self.simulation.zIm += 1/10 * self.simulation.mult
             self.simulation.clear()
         def top(e):
-            self.simulation.cReal -= 1/10 * self.simulation.mult
+            self.simulation.zReal -= 1/10 * self.simulation.mult
             self.simulation.clear()
         def bottom(e):
-            self.simulation.cReal += 1/10 * self.simulation.mult
+            self.simulation.zReal += 1/10 * self.simulation.mult
             self.simulation.clear()
             
         def zoom(e):
-            self.simulation.zoomC((e.x,e.y))
+            self.simulation.zoomZ((e.x,e.y))
             
         def unzoom(e):
-            self.simulation.zoomC((e.x,e.y),2)
+            self.simulation.zoomZ((e.x,e.y),2)
             
         self.canvas.bind("<Button-1>",zoom)
         self.canvas.bind("<Button-3>",unzoom)
