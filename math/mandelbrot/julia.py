@@ -8,7 +8,6 @@ import time
 import os
 import sys
 from copy import *
-import wave
 from os import system
 
 class Simulation:
@@ -21,35 +20,27 @@ class Simulation:
         
         self.limit = 10
 
-        self.mult = 3
-        self.posR = 0
-        self.posI = 0
+        self.mult = 8
+        self.posR = -4
+        self.posI = -4
         
         self.cReal = 1
         self.cIm = 0
-        
-        self.clearZ()
         self.clear()
         
         if not os.path.exists("./images"):
             os.makedirs("./images")
     
-    def clearZ(self):
-        # Initialize the values of z in z -> z**2 + c                
-        self.zReal = np.indices((self.w,self.h),dtype=np.float64)[0]
-        self.zIm = np.indices((self.w,self.h),dtype=np.float64)[1]                
-        self.positionZ()
-
     def positionZ(self):
-        self.zReal = self.zReal / self.w  * self.mult + self.posR - 2
-        self.zIm = self.zIm / self.w  * self.mult + self.posI - 1.5
+        self.zReal = self.zReal / self.w  * self.mult + self.posR 
+        self.zIm = self.zIm / self.w  * self.mult + self.posI
     
     def dePositionZ(self):    
-        self.zReal = (self.zReal - self.posR + 2) * self.w / self.mult
-        self.zIm = (self.zIm - self.posI + 1.5) * self.w  / self.mult
+        self.zReal = (self.zReal - self.posR) * self.w / self.mult
+        self.zIm = (self.zIm - self.posI) * self.w  / self.mult
     
     def zoomZ(self,coords,factor=0.5):
-        self.clearZ()
+        self.clear()
         self.dePositionZ()
         self.mult *= factor
         print("Zoom multiplier: "+str(self.mult))
@@ -60,7 +51,6 @@ class Simulation:
             self.posI += (y * self.mult) 
         
         self.positionZ()
-        self.clear()
         
     def clear(self):
         self.step = 0
@@ -73,6 +63,12 @@ class Simulation:
         self.drawn = 0        
         self.iteration = 0
         self.iterations = 4
+        
+        # Initialize the values of z in z -> z**2 + c                
+        self.zReal = np.indices((self.w,self.h),dtype=np.float64)[0]
+        self.zIm = np.indices((self.w,self.h),dtype=np.float64)[1]                
+        self.positionZ()
+
 
     def iterate(self):
         if(self.drawn == 1):
@@ -86,9 +82,8 @@ class Simulation:
             self.zReal[np.abs(self.zReal) > limit**2] = 0
             self.zIm[np.abs(self.zIm) > limit**2] = 0
             # z = z**2 + c
-            a = self.zReal
-            b = self.zIm
-            
+            a = np.copy(self.zReal)
+            b = np.copy(self.zIm)
             # square complex number
             aTemp = (a**2 - b**2)
             b = b*a + a*b
@@ -100,7 +95,7 @@ class Simulation:
             modulus = np.sqrt(self.zReal**2 + self.zIm**2)
             self.set[(self.set == 0) & ((modulus) > limit)] = step
             
-        self.saveImage()
+        #self.saveImage()
         self.drawn = 1
         
     def createImage(self, canvas):
@@ -118,28 +113,7 @@ class Simulation:
 
     def saveImage(self):
         self.imagenum += 1
-        self.image.save("./images/image-"+str(self.imagenum).zfill(6)+".png")
-
-    def play_audio(self):
-        SECOND = 44100
-        sound = wave.open('sound.wav', 'w')
-        sound.setparams((1, 1, SECOND, 0, 'NONE', 'not compressed'))
-        data = bytearray()
-        set = self.set
-        
-        audio = np.sum(set,axis=1)
-        max = np.max(audio)
-        audio = audio / max
-        print(np.min(audio))
-        for r in range (0,1):
-            for i in range(0,len(audio)):
-                s = int(127*audio[i]+127)
-                data.append(s)
-            
-        sound.writeframes(data)
-        sound.close()
-        system("aplay sound.wav")
-
+        self.image.save("./images/image-"+str(self.imagenum).zfill(6)+".png")         
         
 class Application(ttk.Frame):
     def __init__(self, w, h, master = None):
@@ -178,8 +152,10 @@ class Application(ttk.Frame):
         try:
             self.simulation.iterations = int(self.iterations_num.get())
             self.simulation.limit = int(self.limit.get())
-            self.simulation.cReal = int(self.cReal.get())
-            self.simulation.cIm = int(self.cIm.get())
+            self.simulation.cReal = float(self.cReal.get())
+            self.simulation.cIm = float(self.cIm.get())
+            print("c: "+str(self.simulation.cReal) +" + " + str(self.simulation.cIm) + "i")
+        
         except:
             pass
 
@@ -229,16 +205,11 @@ class Application(ttk.Frame):
         self.redraw_btn["command"] = self.simulation.clear
         
         def clear():
-            self.simulation.clearZ()
             self.simulation.clear()
         
         self.clear_btn = ttk.Button(self.top_panel)
         self.clear_btn["text"] = "Clear"
         self.clear_btn["command"] = clear
-
-        self.play_audio_btn = ttk.Button(self.top_panel)
-        self.play_audio_btn["text"] = "Play audio"
-        self.play_audio_btn["command"] = self.simulation.play_audio
         
         self.iterations_num = tk.StringVar()
         self.iterations_num.set(40)        
@@ -259,7 +230,7 @@ class Application(ttk.Frame):
 
         
         self.cReal = tk.StringVar()
-        self.cReal.set(1)
+        self.cReal.set("-0.5")
         cRealLabel = ttk.Label(self.top_panel,
                                      text="real part of c")
         cReal_input = ttk.Entry(self.top_panel,
@@ -267,7 +238,7 @@ class Application(ttk.Frame):
                                 width=5, justify="r")
 
         self.cIm = tk.StringVar()
-        self.cIm.set(1)
+        self.cIm.set("0.563")
 
         cImLabel = ttk.Label(self.top_panel,
                                      text="imaginary part of c")
@@ -280,7 +251,6 @@ class Application(ttk.Frame):
         self.play_btn.grid(column = 0, row=0, padx=5, pady=5)        
         self.redraw_btn.grid(column = 1, row=0, padx=5, pady=5)
         self.clear_btn.grid(column = 2, row=0, padx=5, pady=5)
-        self.play_audio_btn.grid(column = 3, row=0, padx=5, pady=5)
         iterations_numLabel.grid(column=4, row=0,)
         iterations_num.grid(column=4, row=1)
         limitLabel.grid(column=5, row=0,)
