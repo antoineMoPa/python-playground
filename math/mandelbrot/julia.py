@@ -19,6 +19,8 @@ class Simulation:
         self.interval = 0.2
         self.imagenum = 0
         
+        self.limit = 10
+
         self.mult = 3
         self.posR = 0
         self.posI = 0
@@ -30,9 +32,7 @@ class Simulation:
             os.makedirs("./images")
     
     def clearC(self):
-        # Initialize the values of c in z -> z**2 + c
-        self.c = 2
-                
+        # Initialize the values of c in z -> z**2 + c                
         self.cReal = np.indices((self.w,self.h),dtype=np.float64)[0]
         self.cIm = np.indices((self.w,self.h),dtype=np.float64)[1]
         
@@ -85,7 +85,7 @@ class Simulation:
         if(self.drawn == 1):
             return
         step = 0
-        limit = 2
+        limit = self.limit
         
         for iteration in range(0,self.iterations):
             step += 1
@@ -184,6 +184,7 @@ class Application(ttk.Frame):
         # pass settings
         try:
             self.simulation.iterations = int(self.iterations_num.get())
+            self.simulation.limit = int(self.limit.get())
         except:
             pass
 
@@ -244,10 +245,33 @@ class Application(ttk.Frame):
         self.play_audio_btn["text"] = "Play audio"
         self.play_audio_btn["command"] = self.simulation.play_audio
         
+        self.iterations_num = tk.StringVar()
+        self.iterations_num.set(40)
+        iterations_numLabel = ttk.Label(self.top_panel,
+                                     text="max iterations")
+        iterations_num = ttk.Entry(self.top_panel,
+                                textvariable=self.iterations_num,
+                                width=5, justify="r")
+
+        self.limit = tk.StringVar()
+        self.limit.set(40)
+        limitLabel = ttk.Label(self.top_panel,
+                                     text="limit")
+        limit = ttk.Entry(self.top_panel,
+                                textvariable=self.limit,
+                                width=5, justify="r")
+
+
         self.play_btn.grid(column = 0, row=0, padx=5, pady=5)        
         self.redraw_btn.grid(column = 1, row=0, padx=5, pady=5)
         self.clear_btn.grid(column = 2, row=0, padx=5, pady=5)
         self.play_audio_btn.grid(column = 3, row=0, padx=5, pady=5)
+        iterations_numLabel.grid(column=4, row=0,)
+        iterations_num.grid(column=4, row=1)
+        limitLabel.grid(column=5, row=0,)
+        limit.grid(column=5, row=1)
+
+        
         self.top_panel.pack()
         self.middle_panel.pack()
 
@@ -296,23 +320,10 @@ class Application(ttk.Frame):
     def createSettingsWidgets(self):
         # you can create settings and use them in your simulation
         self.settingsFrame = tk.Frame()
-        self.iterations_num = tk.StringVar()
-
-        self.iterations_num.set(40)
-
-        iterations_numLabel = ttk.Label(self.settingsFrame,
-                                     text="max iterations")
-        iterations_num = ttk.Entry(self.settingsFrame,
-                                textvariable=self.iterations_num,
-                                width=5, justify="r")
-
-        iterations_numLabel.grid(row=0, column=0)
-        iterations_num.grid(row=1, column=0)
-
         self.settingsFrame.pack(pady=10)
 
 master = tk.Tk()
-app = Application(1000, 1000, master)
+app = Application(500, 500, master)
 print("use click to zoom and right click to unzoom")
 app.master.title("Simulation")
 app.mainloop()
