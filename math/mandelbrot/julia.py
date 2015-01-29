@@ -10,6 +10,12 @@ import sys
 from copy import *
 from os import system
 
+# Ref:
+# http://hypertextbook.com/chaos/22.shtml
+# http://www.mcgoodwin.net/julia/juliajewels.html
+# http://en.wikipedia.org/wiki/Open_set
+# http://en.wikipedia.org/wiki/Julia_set
+
 class Simulation:
     def __init__(self,w,h):
         np.errstate(divide='ignore')
