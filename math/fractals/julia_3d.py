@@ -23,7 +23,7 @@ class Simulation:
         self.time = 0
         self.interval = 0.2
         self.imagenum = 0
-        self.layers_num = 60
+        self.layers_num = 150
         self.limit = 10
 
         self.cReal = 1
@@ -78,11 +78,12 @@ class Simulation:
     def iterate(self):
         if(self.drawn == 1):
             return
-        step = 0
+        
         limit = self.limit
         layers_num = self.layers_num
         self.layers = np.zeros((layers_num,self.w,self.h),dtype=np.float64)
         for layer in range(0,layers_num):
+            step = 0
             zReal = np.copy(self.zReal)
             zIm = np.copy(self.zIm)
             for iteration in range(0,self.iterations):
@@ -99,12 +100,15 @@ class Simulation:
                 a = aTemp
 
                 # addition
-                zReal = a + self.cReal + 0.008 * layer
-                zIm = b + self.cIm + 0.008 * layer
+                zReal = a + self.cReal + 0.003 * layer
+                zIm = b + self.cIm + 0.003 * layer
                 modulus = np.sqrt(zReal**2 + zIm**2)
                 self.layers[layer,(self.layers[layer,:] == 0) & ((modulus) > limit)] = step
-                
-        self.layers[self.layers == 0] = 1
+        
+        self.layers[self.layers < 3] = 1
+        #self.layers[self.layers == 0] = 1
+        
+        
         np.save("voxel.npy",self.layers)
         
         
