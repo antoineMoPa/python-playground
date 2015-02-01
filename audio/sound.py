@@ -56,36 +56,6 @@ f_to_sin = lambda f,i: (
 )
 
 
-#song = []
-#
-#song += [0,2,4,6,7,2,0]
-#song += [0,2,4,6,8,2,0]
-#song += [0,2,4,6,9,2,0]
-#song += [0,2,4,6,7,2,0]
-#song += [0,2,4,6,7,2,0]
-#song += [0,2,4,6,8,2,0]
-#song += [0,2,4,6,9,2,0]
-#song += [0,2,4,6,7,2,0]
-#song += [0,2,3,4,5,1,0]
-#song += [0,2,3,4,6,1,0]
-#song += [0,2,3,4,7,1,0]
-#song += [0,2,3,4,5,1,0]
-#song += [0,2,3,4,5,1,0]
-#song += [0,2,3,4,6,1,0]
-#song += [0,2,3,4,7,1,0]
-#song += [0,2,3,4,5,1,0]
-#
-#song = song + song
-#
-#background = []
-#background += [7,8,9,7]
-#background += [7,8,9,7]
-#background += [5,6,7,5]
-#background += [5,6,7,5]
-#
-#background = background + background
-
-#length = SECOND * 11
 
 #tracks = [song,background]
 #
@@ -131,7 +101,7 @@ def track_to_array(track):
         if(time > max_time):
             max_time = time
         
-    track_data = np.zeros(max_time * SECOND, np.float)
+    track_data = np.zeros(max_time * SECOND + 1, np.float)
 
     for note in notes:
         f = note_func(note[0])
@@ -140,16 +110,52 @@ def track_to_array(track):
             track_data[i + note[2] * SECOND] += note_sound[i]
 
     max = np.max(track_data)
+    min = np.min(track_data)
+    if -min > max:
+        max = -min
+        
     track_data /= max
     return track_data
 
+song = []
+
+song += [0,2,4,6,7,2,0]
+song += [0,2,4,6,8,2,0]
+song += [0,2,4,6,9,2,0]
+song += [0,2,4,6,7,2,0]
+song += [0,2,4,6,7,2,0]
+song += [0,2,4,6,8,2,0]
+song += [0,2,4,6,9,2,0]
+song += [0,2,4,6,7,2,0]
+song += [0,2,3,4,5,1,0]
+song += [0,2,3,4,6,1,0]
+song += [0,2,3,4,7,1,0]
+song += [0,2,3,4,5,1,0]
+song += [0,2,3,4,5,1,0]
+song += [0,2,3,4,6,1,0]
+song += [0,2,3,4,7,1,0]
+song += [0,2,3,4,5,1,0]
+
+song = song + song
+
+background = []
+background += [7,8,9,7]
+background += [7,8,9,7]
+background += [5,6,7,5]
+background += [5,6,7,5]
+
+background = background + background
+
+notes = []
+for i in range(0,len(song)):
+    notes.append((song[i],0.1,i*0.05))
+
+notes.append((7,1,len(song)*0.05))
+    
+# notes: [(note, length, time), ...]
 track = {
     'basenote': 40,
-    'notes': [
-        # note, length, time
-        (6,1/3,0),
-        (7,1,2)     
-    ],
+    'notes': notes,
     'note_func': lambda note: (
         getFrequencyFromNote(
             majorScale(note,40)
@@ -159,9 +165,9 @@ track = {
 
 song_data = track_to_array(track)
 
+song_data[song_data > 0.2] *= 0.5
+
 data = np_array_to_sound(song_data)
-
-
     
 sound.writeframes(data)
 sound.close()
