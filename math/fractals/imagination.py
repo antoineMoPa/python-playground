@@ -20,7 +20,7 @@ class Simulation:
         self.imagenum = 0
         
         self.limit = 10
-
+        
         self.mult = 3
         self.posR = 0
         self.posI = 0
@@ -46,7 +46,7 @@ class Simulation:
     def positionC(self):
         self.cReal = self.cReal / self.w  * self.mult + self.posR - 2
         self.cIm = self.cIm / self.w  * self.mult + self.posI - 1.5
-        
+    
     def dePositionC(self):    
         self.cReal = (self.cReal - self.posR + 2) * self.w / self.mult
         self.cIm = (self.cIm - self.posI + 1.5) * self.w  / self.mult
@@ -98,12 +98,26 @@ class Simulation:
             
             # square complex number
             aTemp = (a**2 - b**2)
-            b = b*a + a*b
+            b = 2*b*a
             a = aTemp
+            # square again
+            cTemp = (a**2 - b**2)
+            d = 2*b*a
+            c = cTemp
+            # square again
             
+            # square again
+            eTemp = (c**2 - d**2)
+            f = 2*c*d
+            e = eTemp
+
+            
+            # z**8 + z**4 + z **2 + c
             # addition
-            self.real = a + self.cReal
-            self.im = b + self.cIm
+            self.real = e + c + a + self.real + self.cReal
+            self.im = f + d + b + self.im + self.cIm
+
+            
             modulus = np.sqrt(self.real**2 + self.im**2)
             self.set[(self.set == 0) & ((modulus) > limit)] = step
             
