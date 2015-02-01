@@ -1,8 +1,23 @@
-# phys-playground
+# python-playground
 
-Python code simulating waves, particles, fluid-like particles.
+Here are scripts that simulate stuff and/or produce nice images. The goal is not to design interfaces so the UI/UX is bad and I like it like this.
 
-# Installing
+# Contents
+
+## pseudo-Physics
+
+Physics without equations.
+
+* a wave simulator
+* particles with different properties
+
+## Math
+
+* Mandelbrot set explorer
+* Julia set explorer
+* weird 3d volumetric export of the Julia set
+
+# Setup
 
 You need these packages:
 
@@ -15,6 +30,10 @@ If you use debian (including ubuntu and stuff like that), just do this:
 You also need to install some python packages:
   
     sudo pip-3.2 install Pillow PyEVTK
+
+For some 3d things, like the 3d Julia set thing, maybe you will want to download mayavi2
+
+    sudo apt-get install mayavi2
 
 # Running code
 
