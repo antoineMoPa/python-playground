@@ -72,13 +72,22 @@ song += [0,2,3,4,5,1,0]
 
 song = song + song
 
-length = SECOND * 10
+song += [0,2,4,6,7,7,7]
+
+
+
+
+length = SECOND * 11
+
+note_length = length / len(song)
+envelope = lambda i: 1-(2 * (i/note_length % 1) - 1) ** 2
 
 for i in range (0,length):
     note_num = song[int(i/length * len(song))]
     note_num = majorScale(note_num,40)
     f = getFrequencyFromNote(note_num)
     d = math.sin(2 * math.pi * f * i / SECOND)
+    d *= envelope(i)
     s = int(127*d+127)
     data.append(s)
         
