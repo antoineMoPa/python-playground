@@ -23,16 +23,20 @@ class Simulation:
         self.time = 0
         self.interval = 0.2
         self.imagenum = 0
-
+        self.mult = 8
         self.limit = 10
-
         self.cReal = 1
         self.cIm = 0
+        self.posR = -4
+        self.posI = -4
+
         self.clear()
         self.iterate()
         if not os.path.exists("./images"):
             os.makedirs("./images")
 
+        
+        
     def positionZ(self):
         self.zReal = self.zReal / self.w  * self.mult + self.posR
         self.zIm = self.zIm / self.w  * self.mult + self.posI
@@ -61,11 +65,6 @@ class Simulation:
 
         # the set
         self.set = np.zeros( (self.w,self.h), dtype=np.int32)
-
-        self.mult = 8
-        self.posR = -4
-        self.posI = -4
-
         self.drawn = 0
         self.iteration = 0
         self.iterations = 4
