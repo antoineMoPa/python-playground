@@ -92,9 +92,13 @@ def np_array_to_sound(song_data):
 def track_to_array(track):
     notes = track['notes']
     note_func = track['note_func']
-
+    
     # find max time
     max_time = 0
+
+    if(notes == []):
+        return np.zeros(0, np.float)
+    
     for note in notes:
         # begining time + length
         time = note[2] + note[1]
@@ -103,6 +107,7 @@ def track_to_array(track):
         
     track_data = np.zeros(max_time * SECOND + 1, np.float)
 
+    
     for note in notes:
         f = note_func(note[0])
         note_sound = create_note(f,int(note[1] * SECOND))
@@ -119,38 +124,44 @@ def track_to_array(track):
 
 song = []
 
-song += [0,2,4,6,7,2,0]
-song += [0,2,4,6,8,2,0]
-song += [0,2,4,6,9,2,0]
-song += [0,2,4,6,7,2,0]
-song += [0,2,4,6,7,2,0]
-song += [0,2,4,6,8,2,0]
-song += [0,2,4,6,9,2,0]
-song += [0,2,4,6,7,2,0]
-song += [0,2,3,4,5,1,0]
-song += [0,2,3,4,6,1,0]
-song += [0,2,3,4,7,1,0]
-song += [0,2,3,4,5,1,0]
-song += [0,2,3,4,5,1,0]
-song += [0,2,3,4,6,1,0]
-song += [0,2,3,4,7,1,0]
-song += [0,2,3,4,5,1,0]
-
-song = song + song
-
 background = []
-background += [7,8,9,7]
-background += [7,8,9,7]
-background += [5,6,7,5]
-background += [5,6,7,5]
+background += [7,8,9,7, 8,9,10,8]
+background += [7,8,9,7, 8,9,10,8]
 
-background = background + background
+
 
 notes = []
-for i in range(0,len(song)):
-    notes.append((song[i],0.1,i*0.05))
 
-notes.append((7,1,len(song)*0.05))
+for i in range(0,len(song)):
+    notes.append((song[i],0.1,i*0.16))
+
+def ta_tata_ta(i):
+    i %= 8
+    if(i < 3):
+        return i/4*0.5
+    if(i == 3):
+        return 0
+    if(i == 4):
+        return 0.33
+    if(i == 5):
+        return 0.66
+    if(i == 6):
+        return 1
+    
+period_notes_num = 7
+for i in range(0,len(background)):
+    period = int(i / period_notes_num)
+    in_period = i % period_notes_num
+    period_time = 0.8
+    note_offset = 0.9 * period_time * ta_tata_ta(in_period)
+    time = period_time * period
+    time += note_offset
+    base_note = 22
+    note = background[i]
+    notes.append((minorScale(note,base_note),0.1,time))
+
+    
+#notes.append((7,1,len(song)*0.06))
     
 # notes: [(note, length, time), ...]
 track = {
@@ -158,14 +169,12 @@ track = {
     'notes': notes,
     'note_func': lambda note: (
         getFrequencyFromNote(
-            majorScale(note,40)
+            note
         )
     )
 }
 
 song_data = track_to_array(track)
-
-song_data[song_data > 0.2] *= 0.5
 
 data = np_array_to_sound(song_data)
     
