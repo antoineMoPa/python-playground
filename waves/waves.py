@@ -73,8 +73,12 @@ class Waves:
                     d = self.dist(i,j,k,l)
                     if(d < radius):
                         arr[k][l] += (1-d/radius) * value * math.sin(k)
+        elif(shape == "square"):
+            for k in range(i - radius,i + radius):
+                for l in range(j - radius,j + radius):
+                    arr[k][l] = value
 
-            
+        
     def dist(self,x1,y1,x2,y2):
         return math.sqrt(math.pow(x2 - x1,2) + math.pow(y2 - y1,2))
 
@@ -277,7 +281,7 @@ class Application(ttk.Frame):
             #for i in range(y-size, y+size):
             #    for j in range(x-size, x+size):
             #        self.waves.tfactors[i,j] = 0
-            self.waves.point(y, x, 80, +0.1, arr=arr, shape="point")
+            self.waves.point(y, x, 10, +0.1, arr=arr, shape="square")
             self.waves.tfactors = np.clip(self.waves.tfactors,0.1,1)
         else:
             self.waves.point(y, x, 20, 0.1, arr=arr, shape="lines")
