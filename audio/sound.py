@@ -35,10 +35,10 @@ def noteToScale(i,baseNote,scale):
     return scale[abs(i) % len(scale)] + octaveOffset
 
 def majorScale(i,baseNote):
-    return noteToScale(i,baseNote,[0,2,4,5,7,9,11])
+    return noteToScale(int(i),baseNote,[0,2,4,5,7,9,11])
 
 def minorScale(i,baseNote):
-    return noteToScale(i,baseNote,[0,2,3,5,7,8,11])
+    return noteToScale(int(i),baseNote,[0,2,3,5,7,8,11])
 
 def getFrequencyFromNote(note):
     currentNote = note % 12;
@@ -75,6 +75,17 @@ f_to_sin = lambda f,i: (
 #    s = int(127*d+127)
 #    data.append(s)
 
+class Cache():
+    def __init__(self):
+        self.vals = {}
+    def add(self, key, value):
+        self.vals[key] = value
+    def get(self,key):
+        try:
+            return self.vals[key]
+        except:
+            return -1
+        
 def create_note(f,length):
     arr = []
     for i in range(0,int(length)):
@@ -106,14 +117,13 @@ def track_to_array(track):
             max_time = time
         
     track_data = np.zeros(max_time * SECOND + 1, np.float)
-
     
     for note in notes:
         f = note_func(note[0])
         note_sound = create_note(f,int(note[1] * SECOND))
         for i in range(0,len(note_sound)):
             track_data[i + note[2] * SECOND] += note_sound[i]
-
+            
     max = np.max(track_data)
     min = np.min(track_data)
     if -min > max:
@@ -125,41 +135,36 @@ def track_to_array(track):
 song = []
 
 background = []
+
 background += [7,8,9,7, 8,9,10,8]
 background += [7,8,9,7, 8,9,10,8]
+background += [5,6.1,8,5, 8,9,10,8]
+background += [5,6.1,8,5, 8,9,10,8]
+background += [12,5,12,5, 11,9,11,8]
+background += [10,5,10,5, 11,11,11,11]
+background += [12,5,12,5, 11,9,11,8]
+background += [12,12,12,12, 11,10,9,8]
 
-
+#background += background
 
 notes = []
 
 for i in range(0,len(song)):
     notes.append((song[i],0.1,i*0.16))
-
-def ta_tata_ta(i):
-    i %= 8
-    if(i < 3):
-        return i/4*0.5
-    if(i == 3):
-        return 0
-    if(i == 4):
-        return 0.33
-    if(i == 5):
-        return 0.66
-    if(i == 6):
-        return 1
     
 period_notes_num = 7
 for i in range(0,len(background)):
     period = int(i / period_notes_num)
     in_period = i % period_notes_num
-    period_time = 0.8
-    note_offset = 0.9 * period_time * ta_tata_ta(in_period)
-    time = period_time * period
-    time += note_offset
-    base_note = 22
+    period_time = 2
+    time = period * period_time
+    time += period_time * (in_period / period_notes_num)
     note = background[i]
-    notes.append((minorScale(note,base_note),0.1,time))
-
+    comma = int((note * 10 - int(note) * 10))
+    if comma == 0:
+        notes.append([minorScale(note,20),0.3,time])
+    elif comma == 1:
+        notes.append([minorScale(note,21),0.3,time])
     
 #notes.append((7,1,len(song)*0.06))
     
