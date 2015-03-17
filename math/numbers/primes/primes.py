@@ -19,6 +19,8 @@ def less_dumb_is_prime(num,first_primes):
     for i in range(0,len(first_primes)):
         if num % first_primes[i] == 0:
             return False
+        if first_primes[i] > math.sqrt(num):
+                return True
 
     return dumb_is_prime(num)
 
@@ -28,10 +30,10 @@ def dumb_is_prime(num):
     if num == 2:
         return True
 
-    a = 1
+    a = 0
     
     while a < math.sqrt(num):
-        a += 1
+        a += 2
         if(num % a == 0):
             return False
         
@@ -45,8 +47,17 @@ def run_tests():
     assert(find_first_primes(10) == ten_first)
 
 
-    
-run_tests()
-    
+def get_diffs(nums):
+    diffs = []
+    for i in range(1,len(nums)):
+        diffs.append(nums[i] - nums[i-1])
+    return diffs
 
-print(find_first_primes(10))
+def diff_info(num):
+    primes = find_first_primes(num)
+    diffs = get_diffs(primes)
+    print("diffs: "+str(diffs))
+    print("max: "+str(max(diffs)))
+
+run_tests()
+diff_info(10000)
