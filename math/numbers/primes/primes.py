@@ -30,10 +30,10 @@ def dumb_is_prime(num):
     if num == 2:
         return True
 
-    a = 0
+    a = 1
     
-    while a < math.sqrt(num):
-        a += 2
+    while a <= math.sqrt(num):
+        a += 1
         if(num % a == 0):
             return False
         
@@ -43,6 +43,8 @@ def run_tests():
     assert(dumb_is_prime(257))
     assert(dumb_is_prime(2))
     assert(dumb_is_prime(3))
+    assert(find_first_primes(1000)[999] == 7919)
+    
     ten_first = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
     assert(find_first_primes(10) == ten_first)
 
@@ -59,5 +61,24 @@ def diff_info(num):
     print("diffs: "+str(diffs))
     print("max: "+str(max(diffs)))
 
+def dumb_is_probable_prime(num):
+    firsts = find_first_primes(10)
+    print("last first prime: "+str(firsts[-1]))
+    for i in range(0,len(firsts)):
+        if firsts[i] > math.sqrt(num):
+            return True
+        if num % firsts[i] == 0:
+            return False
+
+    return True
+    
+def test_probable_prime_func(func):
+
+    num = 663
+    print("validation:       "+str(dumb_is_prime(num)))
+    print("probability test: "+str(func(num)))
+
 run_tests()
-diff_info(10000)
+#diff_info(10000)
+
+test_probable_prime_func(dumb_is_probable_prime)
