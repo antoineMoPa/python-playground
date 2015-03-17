@@ -71,14 +71,16 @@ def dumb_is_probable_prime(num, firsts):
     return True
 
 def test_probable_prime_func(func):
-    num_first = 10
+    num_first = 70
     firsts = find_first_primes(num_first)
-    print("last first prime: " + str(firsts[-1]))
     positives = 0
     false_positives = 0
     false_negatives = 0
-
-    for  i in range(0,10000):
+    
+    min_num = 100000
+    max_num = 200000
+    
+    for  i in range(min_num, max_num):
         num = i
         test = dumb_is_prime(num)
         prob = func(num, firsts)
@@ -97,10 +99,16 @@ def test_probable_prime_func(func):
     correct_ratio = 1 - error_ratio
     percent_correct = correct_ratio*100
     percent_correct_str = "%.2f" % (percent_correct)
+    percent_lastfirst = firsts[-1] / max_num * 100
+    percent_lastfirst_str = "%.2f" % percent_lastfirst
     
-    print("Primes found :       " + str(positives))
+    print("Primes found :       " + str(positives - false_positives))
     print("False primes found : " + str(false_positives))
-    print("Percentage correct:  " + percent_correct_str)
+    print("Percentage correct : " + percent_correct_str
+          + " %")
+    print("last first prime :   " + str(firsts[-1]))
+    print("last first is :      "
+          + percent_lastfirst_str + " % of maximum number")
     
 run_tests()
 #diff_info(10000)
