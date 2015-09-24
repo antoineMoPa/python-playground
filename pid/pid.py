@@ -2,10 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def integral(e):
+    # definition
+    # sum of area of
     sum=0
     t = len(e)
     sum = np.sum(e)
-    return sum * t
+        
+    return sum
 
 def derivative(e):
     # definition:
@@ -21,9 +24,9 @@ def derivative(e):
     return (e[t] - e[t-dt])/dt
 
 def u(t,e):
-    kp=0.05
-    ki=0.009
-    kd=0.05
+    kp=0.05  # 0.01
+    ki=0.005  # 0.009
+    kd=1  # 0.05
 
     return (
         kp * e[t] +
@@ -39,7 +42,7 @@ def simulate():
     sp = []
     e = []
     
-    for t in range(0,100):
+    for t in range(0,1000):
         if(t < 20):
             sp.append(0)
         else:
@@ -52,7 +55,11 @@ def simulate():
             current_val =  0
             
         e.append(sp[t] - current_val)
-        mv.append(u(t,e))
+        measured = 0
+        if(t > 0):
+            measured = mv[t-1]
+
+        mv.append(measured + u(t,e))
 
     return ts,mv,sp,e
         
@@ -60,6 +67,6 @@ ts,mv,sp,e = simulate()
 plt.plot(mv,label="Measured Value (simulated)")
 plt.plot(sp,label="Set Point",color="orange")
 plt.legend()
-plt.xlim(0,100)
+plt.xlim(0,1000)
 plt.ylim(0,15)
 plt.show()
