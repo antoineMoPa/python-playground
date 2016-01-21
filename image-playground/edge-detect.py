@@ -17,7 +17,6 @@ imgb = img[:,:,2]
 # grayscale
 imggrey = 1/3*(imgr + imgg + imgb)
 
-
 def edgedetect(input_img):
     image = np.copy(input_img)
     roll = 1
@@ -60,17 +59,17 @@ display[:,:,0] += edge
 display[:,:,1] += edge
 display[:,:,2] += edge
 
-fig = plt.figure()
+#fig = plt.figure()
 
 # Image
-plt.subplot(311)
-plt.imshow(img)
+#plt.subplot(311)
+#plt.imshow(img)
 
 # Image with edges
-plt.subplot(312)
-plt.imshow(display)
+#plt.subplot(312)
+#plt.imshow(display)
 
 # Only edges
-plt.subplot(313)
+#plt.subplot(313)
 plt.imshow(edge,cmap = cm.Greys_r)
 plt.show(block=True)
