@@ -18,7 +18,7 @@ imgb = img[:,:,2]
 imggrey = 1/3*(imgr + imgg + imgb)
 
 
-def borderdetect(input_img):
+def edgedetect(input_img):
     image = np.copy(input_img)
     roll = 1
     # We move the image 1px in every direction
@@ -34,31 +34,31 @@ def borderdetect(input_img):
     image8 = np.roll(image2,-roll,1) # left bottom
 
     # Subtract opposed translations
-    image_border = np.abs(
+    image_edge = np.abs(
         image1 - image2 +
         image3 - image4 +
         image8 - image5 +
         image6 - image7
     )
-    return image_border
+    return image_edge
 
 # We can also use only the
 # R,g or b channel (imgr,imgg,imgb)
-border = borderdetect(imggrey)
+edge = edgedetect(imggrey)
 
 # We'll keep the original image
-# and create one with borders over it
+# and create one with edges over it
 display = np.copy(img)
 
 # Make this image less contrasted
-# so we can see the borders
+# so we can see the edges
 display[:,:,:] *= 0.5
 display[:,:,:] += 0.5
 
-# Add the borders to the image
-display[:,:,0] += border
-display[:,:,1] += border
-display[:,:,2] += border
+# Add the edges to the image
+display[:,:,0] += edge
+display[:,:,1] += edge
+display[:,:,2] += edge
 
 fig = plt.figure()
 
@@ -66,12 +66,11 @@ fig = plt.figure()
 plt.subplot(311)
 plt.imshow(img)
 
-# Image with borders
+# Image with edges
 plt.subplot(312)
 plt.imshow(display)
 
-# Only borders
+# Only edges
 plt.subplot(313)
-plt.imshow(border,cmap = cm.Greys_r)
-
+plt.imshow(edge,cmap = cm.Greys_r)
 plt.show(block=True)
