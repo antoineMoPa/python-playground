@@ -36,8 +36,8 @@ def edgedetect(input_img):
     image_edge = np.abs(
         image1 - image2 +
         image3 - image4 +
-        image8 - image5 +
-        image6 - image7
+        0.25 * (image8 - image5 +
+        image6 - image7)
     )
     return image_edge
 
@@ -61,7 +61,7 @@ edge = normalize(edge)
 
 edge = grow(edge)
 
-treshold = 0.5
+treshold = 0.3
 edge[edge < treshold] = 0
 edge[edge > treshold] = 1
 
@@ -76,10 +76,12 @@ display = np.copy(img)
 display[:,:,:] *= 0.5
 display[:,:,:] += 0.5
 
+edge = normalize(edge)
+
 # Add the edges to the image
-display[:,:,0] += edge
-display[:,:,1] += edge
-display[:,:,2] += edge
+display[:,:,0] *= 1-edge
+display[:,:,1] *= 1-edge
+display[:,:,2] *= 1-edge
 
 #fig = plt.figure()
 
@@ -89,11 +91,11 @@ display[:,:,2] += edge
 
 # Image with edges
 #plt.subplot(312)
-#plt.imshow(display)
+plt.imshow(display)
 
 # Only edges
 #plt.subplot(313)
-plt.imshow(edge,cmap = cm.Greys_r)
+#plt.imshow(edge,cmap = cm.Greys_r)
 plt.show(block=True);
 #plt.axis("off")
 #plt.savefig(image_file_name)
