@@ -71,48 +71,53 @@ edge = edgedetect(imggrey)
 
 edge_points = edge > 0.8
 
-height = edge_points.shape[0]
-width = edge_points.shape[1]
 
-edge_y_sum = np.sum(edge_points,axis=1)
-
-# Create 2 groups to find 2 points
-# to perform simple linear regression
-group1, group2 = np.split(edge_y_sum,2)
-
-half = len(group1)
-
-# Average x
-x_1 = half/2
-x_2 = 1.5 * half
-
-# Average y
-y_1 = np.sum(group1)/half
-y_2 = np.sum(group2)/half
-
-delta_y = (y_2 - y_1)
-delta_x = (x_2 - x_1)
-
-m = delta_y / delta_x
-
-# y = mx + b -> b = y - mx
-b = y_1 - m * x_1
-
-line = m * np.linspace(0,100,10) + b
+def points_to_line(points):
+    height = points.shape[0]
+    width = points.shape[1]
+    
+    edge_y_sum = np.sum(points,axis=1)
+    
+    # Create 2 groups to find 2 points
+    # to perform simple linear regression
+    group1, group2 = np.split(edge_y_sum,2)
+    
+    half = len(group1)
+    
+    # Average x
+    x_1 = half/2
+    x_2 = 1.5 * half
+    
+    # Average y
+    y_1 = np.sum(group1)/half
+    y_2 = np.sum(group2)/half
+    
+    delta_y = (y_2 - y_1)
+    delta_x = (x_2 - x_1)
+    
+    m = delta_y / delta_x
+    
+    # y = mx + b -> b = y - mx
+    b = y_1 - m * x_1
+    
+    line = m * np.linspace(0,100,10) + b
+        
+    return m, b
 
 fig = plt.figure()
 plt.subplot(211)
 
-plt.xlim(0,width);
-plt.ylim(0,height);
+plt.xlim(0,edge.shape[1])
+plt.ylim(0,edge.shape[0])
 
+m,b = points_to_line(edge_points)
+    
 # stackoverflow.com/questions/17990845
 plt.gca().set_aspect('equal', adjustable='box')
-x_axis = np.linspace(0,width)
+x_axis = np.linspace(0,edge.shape[1])
 plt.plot(x_axis, m * x_axis + b)
 
 plt.subplot(212)
-plt.plot(edge_y_sum)
 plt.imshow(img)
 
 plt.show();
