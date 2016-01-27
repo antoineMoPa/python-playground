@@ -5,9 +5,9 @@ import numpy as np
 
 # Put some pictures in images/ to test this
 
-img = npimg.imread("images/image-1.jpg")
+#img = npimg.imread("images/image-1.jpg")
 #img = npimg.imread("images/image-2.png")
-#img = npimg.imread("images/image-3.jpg")
+img = npimg.imread("images/image-3.jpg")
 
 # Get each channel
 imgr = img[:,:,0]
@@ -36,14 +36,36 @@ def edgedetect(input_img):
     image_edge = np.abs(
         image1 - image2 +
         image3 - image4 +
-        image8 - image5 +
-        image6 - image7
+        0.25 * (image8 - image5 +
+        image6 - image7)
     )
     return image_edge
+
+def grow(image):
+    image1 = np.roll(image,1,0)
+    image2 = np.roll(image,-1,0)
+    image3 = np.roll(image,1,1)
+    image4 = np.roll(image,-1,1)
+    
+    image = image + image1 + image2 + image3 + image4
+    return image
+
+def normalize(image):
+    image /= np.max(image)
+    return image
 
 # We can also use only the
 # R,g or b channel (imgr,imgg,imgb)
 edge = edgedetect(imggrey)
+edge = normalize(edge)
+
+edge = grow(edge)
+
+treshold = 0.3
+edge[edge < treshold] = 0
+edge[edge > treshold] = 1
+
+edge = grow(edge)
 
 # We'll keep the original image
 # and create one with edges over it
@@ -54,10 +76,12 @@ display = np.copy(img)
 display[:,:,:] *= 0.5
 display[:,:,:] += 0.5
 
+edge = normalize(edge)
+
 # Add the edges to the image
-display[:,:,0] += edge
-#display[:,:,1] += edge
-#display[:,:,2] += edge
+display[:,:,0] *= 1-edge
+display[:,:,1] *= 1-edge
+display[:,:,2] *= 1-edge
 
 #fig = plt.figure()
 
@@ -72,4 +96,6 @@ plt.imshow(display)
 # Only edges
 #plt.subplot(313)
 #plt.imshow(edge,cmap = cm.Greys_r)
-plt.show(block=True)
+plt.show(block=True);
+#plt.axis("off")
+#plt.savefig(image_file_name)
