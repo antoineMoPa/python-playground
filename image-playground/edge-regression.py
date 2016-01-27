@@ -36,15 +36,34 @@ def edgedetect(input_img):
     image_edge = np.abs(
         image1 - image2 +
         image3 - image4 +
-        image8 - image5 +
-        image6 - image7
+        0.25 * (image8 - image5 +
+        image6 - image7)
     )
     return image_edge
+
+def grow(image):
+    image1 = np.roll(image,1,0)
+    image2 = np.roll(image,-1,0)
+    image3 = np.roll(image,1,1)
+    image4 = np.roll(image,-1,1)
+    
+    image = image + image1 + image2 + image3 + image4
+    return image
+
+def normalize(image):
+    image /= np.max(image)
+    return image
 
 def show(image):
     plt.imshow(image,cmap = cm.Greys_r)
     plt.show(block=True)
 
+# We can also use only the
+# R,g or b channel (imgr,imgg,imgb)
+edge = edgedetect(imggrey)
+edge = normalize(edge)
+
+edge = grow(edge)
 
 # We can also use only the
 # R,g or b channel (imgr,imgg,imgb)
