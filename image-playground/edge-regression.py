@@ -41,35 +41,59 @@ def edgedetect(input_img):
     )
     return image_edge
 
+def show(image):
+    plt.imshow(image,cmap = cm.Greys_r)
+    plt.show(block=True)
+
+
 # We can also use only the
 # R,g or b channel (imgr,imgg,imgb)
 edge = edgedetect(imggrey)
 
-# We'll keep the original image
-# and create one with edges over it
-display = np.copy(img)
+edge_points = edge > 0.8
 
-# Make this image less contrasted
-# so we can see the edges
-display[:,:,:] *= 0.5
-display[:,:,:] += 0.5
+height = edge_points.shape[0]
+width = edge_points.shape[1]
 
-# Add the edges to the image
-display[:,:,0] += edge
-#display[:,:,1] += edge
-#display[:,:,2] += edge
+edge_y_sum = np.sum(edge_points,axis=1)
 
-#fig = plt.figure()
+# Create 2 groups to find 2 points
+# to perform simple linear regression
+group1, group2 = np.split(edge_y_sum,2)
 
-# Image
-#plt.subplot(311)
-#plt.imshow(img)
+half = len(group1)
 
-# Image with edges
-#plt.subplot(312)
-plt.imshow(display)
+# Average x
+x_1 = half/2
+x_2 = 1.5 * half
 
-# Only edges
-#plt.subplot(313)
-#plt.imshow(edge,cmap = cm.Greys_r)
-plt.show(block=True)
+# Average y
+y_1 = np.sum(group1)/half
+y_2 = np.sum(group2)/half
+
+delta_y = (y_2 - y_1)
+delta_x = (x_2 - x_1)
+
+m = delta_y / delta_x
+
+# y = mx + b -> b = y - mx
+b = y_1 - m * x_1
+
+line = m * np.linspace(0,100,10) + b
+
+fig = plt.figure()
+plt.subplot(211)
+
+plt.xlim(0,width);
+plt.ylim(0,height);
+
+# stackoverflow.com/questions/17990845
+plt.gca().set_aspect('equal', adjustable='box')
+x_axis = np.linspace(0,width)
+plt.plot(x_axis, m * x_axis + b)
+
+plt.subplot(212)
+plt.plot(edge_y_sum)
+plt.imshow(img)
+
+plt.show();
