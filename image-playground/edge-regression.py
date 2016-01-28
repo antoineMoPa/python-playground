@@ -1,11 +1,13 @@
+from scipy.ndimage.filters import gaussian_filter
 import matplotlib.image as npimg
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
+import math
 
 # Put some pictures in images/ to test this
 
-img = npimg.imread("images/image-1.jpg")
+img = npimg.imread("images/image-4.jpg")
 #img = npimg.imread("images/image-2.png")
 #img = npimg.imread("images/image-3.jpg")
 
@@ -33,21 +35,27 @@ def edgedetect(input_img):
     image8 = np.roll(image2,-roll,1) # left bottom
 
     # Subtract opposed translations
-    image_edge = np.abs(
-        image1 - image2 +
-        image3 - image4 +
-        0.25 * (image8 - image5 +
-        image6 - image7)
-    )
+    image_edge = np.abs(-4 * image + image1 + image2 + image3 + image4)
+
     return image_edge
 
-def grow(image):
-    image1 = np.roll(image,1,0)
-    image2 = np.roll(image,-1,0)
-    image3 = np.roll(image,1,1)
-    image4 = np.roll(image,-1,1)
-    
-    image = image + image1 + image2 + image3 + image4
+def grow(image,num=1):
+    image1 = np.roll(image,num,0)
+    image2 = np.roll(image,-num,0)
+    image3 = np.roll(image,num,1)
+    image4 = np.roll(image,-num,1)
+
+    image5 = np.roll(image1,num,1) # right top
+    image6 = np.roll(image1,-num,1) # right bottom
+    image7 = np.roll(image2,num,1) # left top
+    image8 = np.roll(image2,-num,1) # left bottom
+
+    image = image + np.abs(
+        image1 + image2 +
+        image3 + image4 +
+        0.25 * (image8 + image5 +
+        image6 + image7)
+    ) / 6
     return image
 
 def normalize(image):
@@ -58,15 +66,13 @@ def show(image):
     plt.imshow(image,cmap = cm.Greys_r)
     plt.show(block=True)
 
-# We can also use only the
-# R,g or b channel (imgr,imgg,imgb)
-edge = edgedetect(imggrey)
-edge = normalize(edge)
-
-edge_points = edge > 0.3
+def contrast(image):
+    normalize(image)
+    image[image < 0.5] *= 0.5
+    image[image > 0.5] *= 1
+    return image
 
 def points_to_line(points):
-    points = points.astype(int)
     height = points.shape[0]
     width = points.shape[1]
 
@@ -106,22 +112,34 @@ def points_to_line(points):
             m = deltay / deltax
             b = y_a - m * x_a
 
-    # to test this part, uncomment this
-    #if(strength > 2):
-    #    plt.imshow(points)
-    #    xs = np.linspace(0,width)
-    #    plt.ylim(0,height)
-    #    plt.xlim(0,width)
-    #    plt.plot(xs,np.clip(m*xs+b,0,height))
-    #    plt.show()
+        #plt.imshow(points)
+        #xs = np.linspace(0,width)
+        #plt.ylim(0,height)
+        #plt.xlim(0,width)
+        #plt.plot(xs,np.clip(m*xs+b,0,height))
+        #plt.show()
 
-    return m, b, strength
+        
+        xs = np.linspace(0,width/2)
+        calculated = m*xs+b
+        realfct = np.sum(pointsa*ys,axis=1)/num_a
+        print(calculated.shape,realfct.shape)
+        #deltay = np.sum(np.abs())
+        
+    return m, b
+
+imggrey = gaussian_filter(imggrey,sigma=20)
+imggrey = contrast(imggrey)
+
+edge = edgedetect(imggrey)
+edge = normalize(edge)
+edge_points = edge
 
 # separate image
 width = edge_points.shape[1]
 height = edge_points.shape[0]
 
-num = 10
+num = 40
 cell_width = width/num
 cell_height = height/num
 
@@ -133,7 +151,7 @@ for j in range(0,num):
         end_x = (j+1) * cell_width
         start_y = i * cell_height
         end_y = (i+1) * cell_height
-        m,b,strength = points_to_line(
+        m,b = points_to_line(
             edge_points
             [
                 int(start_y):int(end_y),
@@ -143,11 +161,7 @@ for j in range(0,num):
 
         lines[i,j,0] = m
         lines[i,j,1] = b
-        lines[i,j,2] = strength
 
-
-strength = strength / np.max(strength)
-        
 fig = plt.figure()
 plt.subplot(131)
 plt.imshow(edge_points,cmap = cm.Greys_r)
@@ -165,10 +179,6 @@ for i in range(0,num):
         start_y = i * cell_height
         end_y = (i+1) * cell_height
 
-        # min strength
-        if(line[2] < 0.5):
-            continue
-        
         x_axis = np.linspace(0,cell_width)
 
         m = line[0]
@@ -176,7 +186,8 @@ for i in range(0,num):
         
         plt.plot(
             x_axis+start_x,
-            m * x_axis + b + start_y
+            m * x_axis + b + start_y,
+            color="r"
         )
 
 plt.grid()
