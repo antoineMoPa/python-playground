@@ -5,7 +5,7 @@ import numpy as np
 
 # Put some pictures in images/ to test this
 
-img = npimg.imread("images/image-3.jpg")
+img = npimg.imread("images/image-1.jpg")
 #img = npimg.imread("images/image-2.png")
 #img = npimg.imread("images/image-3.jpg")
 
@@ -63,13 +63,17 @@ def show(image):
 edge = edgedetect(imggrey)
 edge = normalize(edge)
 
-edge_points = edge > 0.5
+edge_points = edge > 0.3
 
 def points_to_line(points):
     points = points.astype(int)
     height = points.shape[0]
     width = points.shape[1]
 
+    if(width % 2 == 1):
+        width = width-1
+        points = points[:,:width]
+        
     xs = np.arange(0,width/2,1).reshape(1,width/2)
     ys = np.arange(0,height,1).reshape((height,1))
 
