@@ -7,7 +7,8 @@ import math
 
 # Put some pictures in images/ to test this
 
-img = npimg.imread("images/image-4.jpg")
+img = npimg.imread("images/image-1.jpg")
+#img = npimg.imread("images/Tux.png")
 #img = npimg.imread("images/image-2.png")
 #img = npimg.imread("images/image-3.jpg")
 
@@ -68,7 +69,7 @@ def show(image):
 
 def contrast(image):
     normalize(image)
-    image[image < 0.5] *= 0.5
+    image[image < 0.5] *= 0.2
     image[image > 0.5] *= 1
     return image
 
@@ -120,18 +121,20 @@ def points_to_line(points):
         #plt.show()
 
         
-        xs = np.linspace(0,width/2)
-        calculated = m*xs+b
-        realfct = np.sum(pointsa*ys,axis=1)/num_a
-        print(calculated.shape,realfct.shape)
+        #xs = np.linspace(0,width/2)
+        #calculated = m*xs+b
+        #realfct = np.sum(pointsa*ys,axis=1)/num_a
+        #print(calculated.shape,realfct.shape)
         #deltay = np.sum(np.abs())
         
-    return m, b
+    return m, b, strength
 
-imggrey = gaussian_filter(imggrey,sigma=20)
+imggrey = gaussian_filter(imggrey,sigma=2)
 imggrey = contrast(imggrey)
 
 edge = edgedetect(imggrey)
+show(edge)
+
 edge = normalize(edge)
 edge_points = edge
 
@@ -139,7 +142,7 @@ edge_points = edge
 width = edge_points.shape[1]
 height = edge_points.shape[0]
 
-num = 40
+num = 120
 cell_width = width/num
 cell_height = height/num
 
@@ -151,7 +154,7 @@ for j in range(0,num):
         end_x = (j+1) * cell_width
         start_y = i * cell_height
         end_y = (i+1) * cell_height
-        m,b = points_to_line(
+        m,b,strength = points_to_line(
             edge_points
             [
                 int(start_y):int(end_y),
@@ -161,6 +164,7 @@ for j in range(0,num):
 
         lines[i,j,0] = m
         lines[i,j,1] = b
+        lines[i,j,2] = strength
 
 fig = plt.figure()
 plt.subplot(131)
@@ -174,13 +178,17 @@ plt.gca().set_aspect('equal', adjustable='box')
 for i in range(0,num):
     for j in range(0,num):
         line = lines[i,j]
+        strength = line[2]
+        print(strength)
+        if(strength < 1):
+            continue
         start_x = j * cell_width
         end_x = (j+1) * cell_width
         start_y = i * cell_height
         end_y = (i+1) * cell_height
 
         x_axis = np.linspace(0,cell_width)
-
+        
         m = line[0]
         b = line[1]
         

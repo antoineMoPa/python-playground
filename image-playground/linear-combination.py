@@ -15,32 +15,72 @@ imgg = img[:,:,1]
 imgb = img[:,:,2]
 
 # grayscale
-image = 1/3*(imgr + imgg + imgb)
+img = 1/3*(imgr + imgg + imgb)
 
-image /= np.max(image)
+img /= np.max(img)
 
-k = 4
-
+grid_size = 200
+    
 def show(image):
     plt.imshow(image,cmap=cm.Greys_r)
     plt.show()
 
 part = np.empty(img.shape)
 
-w = img.shape[1]/k
-h = img.shape[0]/k
+max_steps = 2
 
-coefficients = np.empty((5))
+coefficients = np.empty((grid_size,grid_size,max_steps))
 
-for k in range(2,4):
-    part = np.empty(img.shape)
-    for j in range(0, k):
-        for i in range(0, k):
-            if (i + j) % 2 == 0:
-                part[j * h:(j+1)*h,i * w:(i+1)*w] = -1
-            else:
-                part[j * h:(j+1)*h,i * w:(i+1)*w] = -1
+cell_width = img.shape[1] / grid_size
+cell_height = img.shape[0] / grid_size
 
-    coefficients[k] = np.sum(part * img)
-    show(part * img)
+for a in range(0,grid_size):
+    for b in range(0,grid_size):
+        sub_img = img[
+            a * cell_height:(a + 1) * cell_height,
+            b * cell_width:(b + 1) * cell_width
+        ]
+        part = np.empty(sub_img.shape)
+        for step in range(1,max_steps,1):
+            k = step
+            w = sub_img.shape[1]/k
+            h = sub_img.shape[0]/k
+            for j in range(0, k):
+                for i in range(0, k):
+                    if (i + j) % 2 == 0:
+                        part[j * h:(j+1)*h,i * w:(i+1)*w] = 1
+                    else:
+                        part[j * h:(j+1)*h,i * w:(i+1)*w] = -1
+                        
+            coefficients[a,b,step] = np.sum(part * sub_img)
+                        
 
+final = np.zeros(img.shape)
+
+#coefficients = coefficients / np.max(coefficients)
+
+for a in range(0,grid_size):
+    for b in range(0,grid_size):
+        sub_img = img[
+                a * cell_height:(a + 1) * cell_height,
+                b * cell_width:(b + 1) * cell_width
+            ]
+        part = np.empty(sub_img.shape)
+        for step in range(1,max_steps,1):
+            k = step
+            w = sub_img.shape[1]/k
+            h = sub_img.shape[0]/k
+            for j in range(0, k):
+                for i in range(0, k):
+                    if (i + j) % 2 == 0:
+                        part[j * h:(j+1)*h,i * w:(i+1)*w] = 1
+                    else:
+                        part[j * h:(j+1)*h,i * w:(i+1)*w] = -1
+                        
+            final[
+                a * cell_height:(a + 1) * cell_height,
+                b * cell_width:(b + 1) * cell_width
+            ] += coefficients[a,b,step] * part
+
+
+show(final)

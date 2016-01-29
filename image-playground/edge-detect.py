@@ -7,7 +7,7 @@ import numpy as np
 
 #img = npimg.imread("images/image-1.jpg")
 #img = npimg.imread("images/image-2.png")
-img = npimg.imread("images/image-3.jpg")
+img = npimg.imread("images/image-4.jpg")
 
 # Get each channel
 imgr = img[:,:,0]
@@ -79,7 +79,7 @@ display[:,:,:] += 0.5
 edge = normalize(edge)
 
 # Add the edges to the image
-display[:,:,0] *= 1-edge
+display[:,:,0] *= edge
 display[:,:,1] *= 1-edge
 display[:,:,2] *= 1-edge
 
@@ -96,6 +96,6 @@ plt.imshow(display)
 # Only edges
 #plt.subplot(313)
 #plt.imshow(edge,cmap = cm.Greys_r)
-plt.show(block=True);
+#plt.show(block=True);
 #plt.axis("off")
-#plt.savefig(image_file_name)
+#plt.savefig("moose.jpg")
