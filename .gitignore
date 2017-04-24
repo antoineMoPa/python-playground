@@ -21,3 +21,7 @@ tramp
 
 # elpa packages
 /elpa/
+
+*.png
+*.avi
+*.mp4
